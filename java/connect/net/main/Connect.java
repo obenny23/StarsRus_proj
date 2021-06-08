@@ -3,11 +3,15 @@ package net.main;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import 
 
-/**
- *
- * @author sqlitetutorial.net
- */
+import javax.swing.text.Style;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
+
 public class Connect {
      /**
      * Connect to a sample database
@@ -36,8 +40,63 @@ public class Connect {
     }
     /**
      * @param args the command line arguments
+     * @throws IOException
      */
-    public static void main(String[] args) {
+
+    public static void main(String[] args) throws IOException {
+        BufferedReader reader = new BufferedReader(
+            new InputStreamReader(System.in));
+
         connect();
+        populate();
+
+        System.out.println("            Welcome to Stars R Us             ");
+        System.out.println("----------------------------------------------");
+        System.out.println(" ");
+        System.out.println("Are you signed up? (y/n)");
+
+        String resp = reader.readLine();
+
+        System.out.println(resp);
+
+
+        if (resp == "y" || resp == "Y") {
+            System.out.println("Would you like to Login as:");
+            System.out.println("1. Customer 2.Manager 3.Admin");
+
+            String name = reader.readLine();
+
+            switch (name) {
+                case "1":
+                    
+                    break;
+
+                case "2":
+                
+                    break;
+
+                case "3":
+                
+                    break;
+        
+                default:
+                    break;
+            }
+        }
+
+        else if (resp == "n" || resp == "N") {
+            System.out.println("Would you like to sign up as a new customer?");
+            
+            String r = reader.readLine();
+
+            if (r == "y" || r == "Y") {
+                createNew();
+            }
+        }
+    }
+
+
+    private static void createNew() {
+        System.out.println("no :p ");
     }
 }
