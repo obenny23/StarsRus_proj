@@ -1,11 +1,9 @@
 package net.main;
-
 import java.sql.*;
-
 
 public class Populate {
 
-    public static void populate ()
+    public void createDB()
     {
 
         Connection connection   = null;
@@ -133,6 +131,83 @@ public class Populate {
             // PreparedStatement insert = connection.prepareStatement ("INSERT INTO "
             //     + tableName + " (I, WORD, SQUARE, SQUAREROOT) "
             //     + " VALUES (?, ?, ?, ?)");  
+            createTable.executeQuery("INTO Customers(cname, username, password, address, state, phonenumber, email, tid, ssn) "
+                + "VALUES  ('John Admin','admin','secret','Stock Company SB','CA','(805)6374632','admin@stock.com',1000,'606-60-6060'), "
+                + "('Alfred Hitchcock','alfred','hi','6667 El Colegio #40 SB','CA','(805)2574499', 'alfred@hotmail.com',1022,'606-76-7900'), "
+                + "('Billy Clinton','billy','cl','5777 Hollister SB','CA','(805)5629999','billy@yahoo.com',3045,'606-76-7903'), "
+                + "('Cindy Laugher','cindy','la','7000 Hollister SB','CA','(805)6930011','cindy@hotmail.com',2034,'606-70-7900'), "
+                + "('David Copperfill','david','co','1357 State St SB','CA','(805)8240011','david@yahoo.com',4093,'506-78-7900'), "
+                + "('Elizabeth Sailor','sailor','sa','4321 State St SB','CA','(805)1234567','sailor@hotmail.com',1234,'436-76-7900'), "
+                + "('George Brush','brush','br','5346 Foothill Av','CA','(805)1357999','george@hotmail.com',8956,'632-45-7900'), "
+                + "('Ivan Stock','ivan','st','1235 Johnson Dr','NJ','(805)3223243','ivan@yahoo.com',2341,'609-23-7900'), "
+                + "('Joe Pepsi','joe','pe','3210 State St','CA','(805)5668123','pepsi@pepsi.com',0456,'646-76-3430'), "
+                + "('Magic Jordon','magic','jo,3852 Court Rd','NJ','(805)4535539','jordon@jordon.org',3455,'646-76-8843'), "
+                + "('Olive Stoner','olive','st,6689 El Colegio #151','CA','(805)2574499','olive@yahoo.com',1123,'645-34-7900'), "
+                + "('Frank Olson','frank,ol,6910 Whittier Dr','CA','(805)3456789','frank@gmail.com',3306,'345-23-2134')");
+
+            createTable.executeQuery("INSERT INTO Account(uid) "
+                + "VALUES ('admin'), "
+                + "('alfred'), "
+                + "('billy'), "
+                + "('cindy'), "
+                + "('david'), "
+                + "('sailor'), "
+                + "('brush'), "
+                + "('ivan'), "
+                + "('joe'), "
+                + "('magic'), "
+                + "('olive'), "
+                + "('frank') ");
+    
+            createTable.executeQuery("INSERT INTO Actor(ssym, aname, dob) "
+                + "VALUES ('SKB','Kim Basinger', '12-08-1958'), "
+                + "('SMD','Michael Douglas','09-25-1944'), "
+                + "('STC','Tom Cruise','07-03-1962')");
+
+            createTable.executeQuery("INSERT INTO Contracts(mid, aid, title, role, year_released, value) "
+                + "VALUES (1, 1, 'L.A. Confidential', 'Actor', 1997, 5000000), "
+                + "(2, 2, 'Perfect Murder', 'Actor', 1998, 10000000), "
+                + "(3, 3, 'Jerry Maguire', 'Actor', 1996, 5000000)");
+
+            createTable.executeQuery("INSERT INTO Stock(aid, symbol, closing_price, current_price, active) "
+                + "VALUES (1, 'SKB', 40.00, 40.00, '1'), "
+                + "(2, 'SMD', 71.00, 71.00, '1'), "
+                + "(3, 'STC', 32.50, 32.50, '1')");
+
+            createTable.executeQuery("INSERT INTO Market_Account(tid, aid, balance) "
+                + "VALUES (1022, 001,10000), "
+                + "(3045,002,100000), "
+                + "(2034,003,50000), "
+                + "(4093,004,45000), "
+                + "(1234,005,200000), "
+                + "(8956,006,5000), "
+                + "(2341,007,2000), "
+                + "(0456,008,10000), "
+                + "(3455,009,130200), "
+                + "(1123,010,35000), "
+                + "(3306,011,30500)");
+
+            createTable.executeQuery("INSERT INTO Stock_Account(uid, num_shares, sid) "
+                + "VALUES (2, 100, 1), "
+                + "(3, 500, 2), "
+                + "(3, 100, 3), "
+                + "(4, 250, 3), "
+                + "(5, 100, 1), "
+                + "(5, 500, 2), "
+                + "(5, 50, 3), "
+                + "(6, 1000, 2), "
+                + "(7, 100, 1), "
+                + "(8, 300, 2), "
+                + "(9, 500, 1), "
+                + "(9, 100, 3), "
+                + "(9, 200, 2), "
+                + "(10, 1000, 1), "
+                + "(11, 100, 1), "
+                + "(11, 100, 2), "
+                + "(11, 100, 3), "
+                + "(12, 100, 1), "
+                + "(12, 200, 3), "
+                + "(12, 100, 2)");
 
             
         }
