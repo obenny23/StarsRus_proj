@@ -1,8 +1,6 @@
 package net.main;
 
-import java.sql.*;
-
-public class Customer {
+public class Account {
     private int tid;
     private String username;
     private String password;
@@ -12,7 +10,18 @@ public class Customer {
     private String email;
     private int ssn;
 
-    public void Account(int taxId, String cUsername, String cPassword, String cName, String stateCode, String phoneNum, String cEmail, int SSN)
+    public Account(){
+        tid = -1;
+		username = "";
+		password = "";
+		cname = "";
+		state = "";
+		phone = "";
+		email = "";
+        ssn = 0;
+
+    }
+    public Account(int taxId, String cUsername, String cPassword, String cName, String stateCode, String phoneNum, String cEmail, int SSN)
 	{
         tid = taxId;
 		username = cUsername;

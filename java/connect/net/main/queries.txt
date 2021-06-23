@@ -1,0 +1,4 @@
+ // Get all transactions that match each transNum in transNumAList
+          sql = "SELECT * FROM Transactions T "
+              + "WHERE T.transNum IN (SELECT S.transNum FROM StockTransactions S WHERE S.s_aid=?)";
+

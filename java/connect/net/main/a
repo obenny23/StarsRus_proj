@@ -1,0 +1,128 @@
+
+    private static void openTradersInt(String username, String password) {
+
+        Scanner scn = new Scanner(System.in);
+        // Account account = interfDB.getAccount(false, username, password);
+
+        System.out.println("\n||         Traders Interface           ||");
+        System.out.println("-----------------------------------------");
+		// System.out.println("Welcome " + account.getName() + "!\n");
+
+        boolean isMarketOpen = isMarketOpen();
+
+		while(true)
+		{
+			if(isMarketOpen)
+			{
+				System.out.println("Current date: "); //dbAdapter.getCurrentDate());
+				System.out.println("What would you like to do today?\n");
+				System.out.println("1. Deposit into Market Account");
+				System.out.println("2. Withdraw from Market Account");
+				System.out.println("3. Buy Stocks");
+				System.out.println("4. Sell Stocks");
+				System.out.println("5. Show Market Account Balance");
+				System.out.println("6. Show Stock Transaction History");
+				System.out.println("7. List Current Stock Price and Actor Profile");
+				System.out.println("8. List Movie Information");
+				System.out.println("9. Log out");
+                System.out.print("Enter the number corresponding to the option desired: ");
+
+			}
+			else
+			{
+				//if market is closed
+				System.out.println();
+				System.out.println("\nThe market is closed. No buying or selling of stocks is allowed.");
+				System.out.println("What would you like to do today?\n");
+				System.out.println("1. Deposit into Market Account");
+				System.out.println("2. Withdraw from Market Account");
+				System.out.println("3. Show Market Account Balance");
+				System.out.println("4. Show Stock Transaction History");
+				System.out.println("5. List Current Stock Price and Actor Profile");
+				System.out.println("6. List Movie Information");
+				System.out.println("7. Log out");
+                System.out.print("Enter the number corresponding to the option desired: ");
+
+			}
+
+			//check for non-int input
+			if(!scn.hasNextInt())
+			{
+				System.out.println();
+				System.out.println("Error! Invalid Input!");
+				scn.nextLine();
+				continue;
+			}
+			else
+			{
+				int choice = scn.nextInt();
+				scn.nextLine();
+				//handle invalid input
+				if((isMarketOpen && (choice < 1 || choice > 9)) || (!isMarketOpen && (choice < 1 || choice > 7)))
+				{
+					System.out.println("Invalid input. Please choose one of the 9 options below.");
+					continue;
+				}
+				if(isMarketOpen)
+				{
+					//switch on choice
+					switch(choice)
+					{
+						case 1: showDepositOrWithdraw(0);
+								break;
+						case 2: showDepositOrWithdraw(1);
+								break;
+						case 3: showBuy();
+								break;
+						case 4: showSell();
+								break;
+						case 5: showMarketBalance();
+								break;
+						case 6: showStockTransactions();
+								break;
+						case 7: showCurrentStockPrice();
+								break;
+						case 8: showMovieInfo();
+								break;
+						default: return;
+					}
+				} else {
+					//switch on choice
+					switch(choice) {
+                        case 1: showDepositOrWithdraw(0);
+								break;
+						case 2: showDepositOrWithdraw(1);
+								break;
+						case 3: showMarketBalance();
+								break;
+						case 4: showStockTransactions();
+								break;
+						case 5: showCurrentStockPrice();
+								break;
+						case 6: showMovieInfo();
+								break;
+						default: return;
+					}
+				}
+
+			}
+		}
+    }
+
+    private static void showMovieInfo() {
+    }
+    private static void showCurrentStockPrice() {
+    }
+    private static void showStockTransactions() {
+    }
+    private static void showMarketBalance() {
+    }
+    private static void showSell() {
+    }
+    private static void showBuy() {
+    }
+    private static void showDepositOrWithdraw(int i) {
+    }
+    private static boolean isMarketOpen() {
+        return false;
+    }
