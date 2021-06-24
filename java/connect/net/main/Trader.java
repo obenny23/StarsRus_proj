@@ -18,7 +18,7 @@ public class Trader {
             String resp = scn.nextLine();
 
             if (resp.toLowerCase().equals("yes")) {
-                System.out.println("\nGreat. Enter the following information of for your account\n");
+                System.out.println("\nGreat. Enter the following information for your account");
                 System.out.print("Username: ");
                 String customerUsername = scn.nextLine();
                 System.out.print("Password: ");
@@ -43,8 +43,6 @@ public class Trader {
                         System.exit(0);
                     }
                 }
-
-                scn.close();
                 Trader.openTradersInt(customerUsername, customerPassword);
             }
 
@@ -91,7 +89,7 @@ public class Trader {
         String username = scn.nextLine();
         System.out.print("Password: ");
         String password = scn.nextLine();
-        System.out.print("First and last name: ");
+        System.out.print("First and Last Name: ");
         String name = scn.nextLine();
         System.out.print("State you reside in (i.e. CA,NV,etc.): ");
         String state = scn.nextLine();
@@ -161,8 +159,6 @@ public class Trader {
 				System.out.println("7. List Current Stock Price and Actor Profile");
 				System.out.println("8. List Movie Information");
 				System.out.println("9. Log out");
-                System.out.print("Enter the number corresponding to the option desired: ");
-
 			}
 			else
 			{
@@ -180,7 +176,7 @@ public class Trader {
 			}
 
             do {
-                System.out.print("Enter the number corresponding to the option desired: ");
+                System.out.print("\nEnter number corresponding to the option desired: ");
                 input = scn.nextLine();
 
                 try {
@@ -218,7 +214,8 @@ public class Trader {
                             break;
                     case 8: showMovieInfo();
                             break;
-                    default: return;
+                    default: System.out.println("\nHave a great day!");
+                            System.exit(1);
                 }
             } else {
                 //switch on choice
@@ -235,7 +232,8 @@ public class Trader {
                             break;
                     case 6: showMovieInfo();
                             break;
-                    default: return;
+                    default:  System.out.println("\nHave a great day!");
+                            System.exit(1);
                 }
 			}
 		}

@@ -48,12 +48,11 @@ public class Manager {
     private static void openManagerInt(String username, String password) {
         Scanner scn = new Scanner(System.in);
 
-        // Account account = interfDB.getAccount(true,username, password);
+        Account account = interfDB.getAccount(true, username, password);
 
         System.out.println("\n||         Manager Interface           ||");
         System.out.println("-----------------------------------------");
-        // System.out.println("Welcome " + account.getName() + "!\n");
-        System.out.println("Welcome! \n");
+        System.out.println("Welcome " + account.getName() + "!\n");
 
 		while(true){
 			// System.out.println("\n" + getCurrentDate());
@@ -70,7 +69,7 @@ public class Manager {
 			System.out.println("9. Set New Stock Price");
 			System.out.println("10. Set date");
 			System.out.println("11. Log out");
-			System.out.print("Enter the number corresponding to the option desired: ");
+			System.out.print("\nEnter number corresponding to the option desired: ");
 
             //check for non-int input
 			if(!scn.hasNextInt())
