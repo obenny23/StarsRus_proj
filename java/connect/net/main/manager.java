@@ -55,7 +55,7 @@ public class Manager {
         System.out.println("Welcome " + account.getName() + "!\n");
 
 		while(true){
-			// System.out.println("\n" + getCurrentDate());
+			System.out.println("\n" + interfDB.getCurrentDate());
 
 			System.out.println("\nWhat would you like to do today?\n");
 			System.out.println("1. Add interest");
@@ -125,7 +125,7 @@ public class Manager {
     private static void setNewDate() {
         Scanner scn = new Scanner(System.in);
 
-        System.out.println("Current date: " + getCurrentDate());
+        System.out.println("Current date: " + interfDB.getCurrentDate());
 
         System.out.println("Please enter desire new date in the form MM-DD-YYYY.");
         System.out.print("desired date: ");
@@ -136,11 +136,24 @@ public class Manager {
     }
 
     private static void goOpenMarket() {
-        interfDB.openMarket();
+		if(interfDB.isMarketOpen()){
+			System.out.println("Market is already open.");
+		}
+		else {
+			interfDB.openMarket();
+			System.out.println("Market has been open by request.");
+
+		}
     }
 
 	private static void goCloseMarket() {
-
+		if(!interfDB.isMarketOpen()){
+			System.out.println("Market is already closed.");
+		}
+		else{
+			interfDB.closeMarket();
+			System.out.println("Market has been closed by request.");
+		}
 	}
 
 	private static void showStockTransactions(){
@@ -164,10 +177,15 @@ public class Manager {
     }
     
     private static void showAddInterest() {
+		System.out.println("Adding interest of " + getCurrInterestRate() + " to all account balances...");
+		addInterest();
+		System.out.println("Done!\n");
     }
 
-    private static String getCurrentDate() {
-        String date = "06-09-2021";
-        return date;
-    }
+    private static void addInterest() {
+	}
+
+	private static String getCurrInterestRate() {
+		return null;
+	}
 }

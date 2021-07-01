@@ -1,8 +1,67 @@
 package net.main;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Scanner;
 
+import javax.naming.spi.DirStateFactory.Result;
+
 public class Trader {
+
+    
+    private static final String DB_URL = "jdbc:sqlite:C:/Users/obenn/Desktop/sqlite/sqlite-tools-win32-x86-3350500/StarsRus_proj/db/starsrus.db";
+    private static final Double Commission = 20.00;
+    private static Connection conn = null;
+    private static Statement stmt;
+    private static PreparedStatement prepstmt;
+    
+    public static void connect() {
+        try {
+            conn = DriverManager.getConnection(DB_URL);
+                        
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    private static void close() {
+        try
+        {
+            //close statement
+            if(stmt != null)
+                stmt.close();
+        }
+        catch(SQLException se)
+        {
+            se.printStackTrace();
+        }
+        try
+        {
+            if(prepstmt != null)
+                prepstmt.close();
+        }
+        catch(SQLException se)
+        {
+            se.printStackTrace();
+        }
+        try
+        {
+            //close connection
+            if(conn!=null)
+            {
+                conn.close();
+                conn = null;
+            }
+        }
+        catch(SQLException se)
+        {
+            se.printStackTrace();
+        }
+}
 
     public static void CustomerLogin() {
         Scanner scn = new Scanner(System.in);
@@ -73,15 +132,12 @@ public class Trader {
     private static void createNewAccount(){
         Scanner scn = new Scanner(System.in);
 
-        System.out.println("no :p ");
-        System.out.println("jk (:");
-        System.out.println("You must deposit $1,000 into market account.");
+        System.out.println("You must deposit $1,000 to open a market account.");
         System.out.print("Press enter if you agree, if not enter any key.");
         String promptThousand = scn.nextLine();
         if (!promptThousand.equals("")) {
             System.out.println("We hate to see you leave ): \nThank you for considering Stars R' Us!");
-            scn.close();
-            return;
+            System.exit(1);
         }
 
         System.out.println("\nPlease enter the following fields to create an account");
@@ -97,10 +153,11 @@ public class Trader {
         String phone = scn.nextLine();
         System.out.print("Email address: ");
         String email = scn.nextLine();
-        System.out.print("TaxID: ");
-        int taxid = scn.nextInt();
         System.out.print("ssn (xxx-xx-xxxx): ");
         String SSN = scn.nextLine();
+        System.out.print("4-digit TaxID: ");
+        int taxid = scn.nextInt();
+        
         System.out.println("");
 
         Integer successful  = interfDB.createAccount(taxid, username, password, name, state, phone, email, SSN);
@@ -108,7 +165,12 @@ public class Trader {
         if (successful == 1) {
             System.out.println("");
             System.out.println("Customer account has been created for username " + username + "\n");
-            System.out.println("We'll log you in and take you to the traders interface\n\n");
+            System.out.println("Adding $1000 into your market account.");
+            System.out.println("Getting banking information...");
+            String aid = addMarketAcc(taxid);
+
+            System.out.println("Market account created!\nAccount ID is "+ aid + ", balance at $1000.00");
+            System.out.println("We'll go ahead and log you in and take you to the traders interface\n\n");
             Trader.openTradersInt(username, password);
         }else if ( successful == 2){
             System.out.println("");
@@ -126,11 +188,13 @@ public class Trader {
                 createNewAccount();
             } else {
                 System.out.println("\nHave a nice day!");
+                System.exit(1);
             }
         }
 
         scn.close();
     }
+
 
     static void openTradersInt(String username, String password) {
         String input = "";
@@ -140,7 +204,13 @@ public class Trader {
 
         System.out.println("\n||         Traders Interface           ||");
         System.out.println("-----------------------------------------");
-		System.out.println("Welcome " + acc.getName() + "!\n");
+		System.out.println("Welcome " + acc.getName() + "!");
+        System.out.println("Current date: " + interfDB.getCurrentDate() + "\n");
+
+        if (!isMarketOpen()){
+            System.out.println("The market is closed. No buying or selling of stocks is allowed.\n");
+        }
+
 
         boolean isMarketOpen = isMarketOpen();
 
@@ -148,8 +218,8 @@ public class Trader {
 		{
 			if(isMarketOpen)
 			{
-				System.out.println("Current date: " + interfDB.getDate());
-				System.out.println("What would you like to do today?\n");
+				System.out.println("What would you like to do today?");
+                System.out.println("---------------------------------");
 				System.out.println("1. Deposit into Market Account");
 				System.out.println("2. Withdraw from Market Account");
 				System.out.println("3. Buy Stocks");
@@ -164,8 +234,8 @@ public class Trader {
 			{
 				//if market is closed
 				System.out.println();
-				System.out.println("\nThe market is closed. No buying or selling of stocks is allowed.");
-				System.out.println("What would you like to do today?\n");
+				System.out.println("What would you like to do today?");
+                System.out.println("---------------------------------");
 				System.out.println("1. Deposit into Market Account");
 				System.out.println("2. Withdraw from Market Account");
 				System.out.println("3. Show Market Account Balance");
@@ -206,7 +276,7 @@ public class Trader {
                             break;
                     case 4: showSell();
                             break;
-                    case 5: showMarketBalance();
+                    case 5: showMarketBalance(acc.getTid());
                             break;
                     case 6: showStockTransactions();
                             break;
@@ -215,6 +285,7 @@ public class Trader {
                     case 8: showMovieInfo();
                             break;
                     default: System.out.println("\nHave a great day!");
+                            scn.close();
                             System.exit(1);
                 }
             } else {
@@ -224,7 +295,7 @@ public class Trader {
                             break;
                     case 2: showDepositOrWithdraw(1);
                             break;
-                    case 3: showMarketBalance();
+                    case 3: showMarketBalance(acc.getTid());
                             break;
                     case 4: showStockTransactions();
                             break;
@@ -233,23 +304,105 @@ public class Trader {
                     case 6: showMovieInfo();
                             break;
                     default:  System.out.println("\nHave a great day!");
+                            scn.close();
                             System.exit(1);
                 }
 			}
 		}
     }
 
+    private static String addMarketAcc(int tid) {
+        String newAid = "---";
+        Integer num = getNumMarketAccounts()+1;
+        
+        if (num >= 100) {
+            newAid = num.toString(); 
+        }
+        else if (num >= 10){
+            newAid = "0" + num.toString();
+        }else{
+            newAid = "00" + num.toString();
+        }
+
+        String sql = "INSERT INTO Markets(tid, aid, balance) "
+            + "VALUES (?, ?, ?)";
+
+        try{
+            conn = DriverManager.getConnection(DB_URL);
+            PreparedStatement prepstmt = conn.prepareStatement(sql);
+            System.out.println("tid: " + tid +", aid: " + newAid + ", balance: " + 1000.00);
+            prepstmt.setInt(1, tid);
+            prepstmt.setString(2, newAid);
+            prepstmt.setDouble(3, 1000.00);
+        }catch(SQLException e){
+            e.printStackTrace();
+        }
+
+        return newAid;
+    }
+
     private static void showDepositOrWithdraw(int i) {
+        Scanner scn = new Scanner(System.in);
+        ResultSet rs = null;
+        String sql = "";
+
+        if (i == 0) {
+            System.out.print("How much would you like to deposit: ");
+            String s = scn.nextLine();
+            Double amount = Double.parseDouble(s);
+
+            addToMarketBalance(amount, i);
+            // scn.close();
+
+        }else {
+            System.out.print("How much would you like to withdraw: ");
+            String s = scn.nextLine();
+            Double amount = Double.parseDouble(s);
+            subToMarketBalance(amount, i);
+        }
     }
 
     private static void showBuy() {
+
     }
 
     private static void showSell() {
+        Double earnings = 0.0;
+
+        Double profits = earnings - Commission;
     }
     
-    private static void showMarketBalance() {
+
+
+    private static void showMarketBalance(int tid) {
+        double balance = getBalance(tid); 
+        System.out.println("Your current market balance is " + balance);
     }
+
+    private static double getBalance(int tid) {
+        double balance = 0.00;
+        String sql = "SELECT balance FROM Markets WHERE tid=?";
+        
+        try {
+            connect();
+
+            PreparedStatement prepstmt = conn.prepareStatement(sql);
+            prepstmt.setInt(1, tid);
+            ResultSet rs = prepstmt.executeQuery();
+            
+            if (rs.next()){
+                balance = rs.getDouble("balance");
+            }
+            } catch (Exception se) {
+                se.printStackTrace();
+            }
+            finally{
+                close();
+            }
+            return balance;
+    }
+
+
 
     private static void showStockTransactions() {
     }
@@ -259,12 +412,65 @@ public class Trader {
     
     private static void showMovieInfo() {
     }
-    
-    
-    
-    
 
     private static boolean isMarketOpen() {
-        return false;
+        return true;
+    }
+
+    
+    private static Integer getNumMarketAccounts() {
+        Integer count = 0;
+        String sql = "SELECT COUNT(aid) FROM Markets";
+
+        try {
+            connect();
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
+            
+            if (rs.next()){
+                count = rs.getInt(1);
+            }
+        } catch (Exception se) {
+                se.printStackTrace();
+        }
+        finally{
+            close();
+        }
+        return count;
+    }
+
+    public static void addToMarketBalance(Double amount, int tid) {
+        String sql = "UPDATE Markets SET balance=balance + ? WHERE tid=?";
+        try
+        {
+          connect();
+          PreparedStatement prepstmt = conn.prepareStatement(sql);
+          prepstmt.setDouble(1, amount);
+          prepstmt.setInt(2, tid);;
+          prepstmt.executeUpdate();
+        }catch(SQLException se)
+        {
+          se.printStackTrace();
+        }
+        Double balance = getBalance(tid);
+        System.out.println("Balance is now: " + balance);
+    }
+
+    public static void subToMarketBalance(Double amount, int tid) {
+        String sql = "UPDATE Markets SET balance = balance - ? WHERE tid=?";
+        try
+        {
+          connect();
+          PreparedStatement prepstmt = conn.prepareStatement(sql);
+          prepstmt.setDouble(1, amount);
+          prepstmt.setInt(2, tid);;
+          prepstmt.executeUpdate();
+          
+        }catch(SQLException se)
+        {
+          se.printStackTrace();
+        }
+        Double balance = getBalance(tid);
+        System.out.println("Balance is now: " + balance);
     }
 }

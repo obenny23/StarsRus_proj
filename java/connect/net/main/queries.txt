@@ -2,3 +2,7 @@
           sql = "SELECT * FROM Transactions T "
               + "WHERE T.transNum IN (SELECT S.transNum FROM StockTransactions S WHERE S.s_aid=?)";
 
+
+// get number of accounts to get new aid 
+ sql = "SELECT COUNT(aid) FROM Markets"
+ 

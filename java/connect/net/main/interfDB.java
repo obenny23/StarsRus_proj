@@ -146,7 +146,7 @@ public class interfDB {
     }
 
 
-    public boolean isMarketOpen()
+    public static boolean isMarketOpen()
     {
         String sql = "";
         boolean isMarketOpen = false;
@@ -233,14 +233,48 @@ public class interfDB {
 
     }
 
-    public static ResultSet updateDB(String sql) {
-        ResultSet rset = null;
+    public static void updateDB(String sql){
+        Connection conn  = null;
+        try {
+            conn = DriverManager.getConnection(DB_URL);
+        } catch (SQLException e1) {
+            e1.printStackTrace();
+        }
+        Statement statement = null;
 
-        return rset;
+        try{
+            // find the username and password pair entity
+            statement = conn.createStatement();
+            statement.executeUpdate(sql);
+        } catch (SQLException se) {
+            se.printStackTrace();
+        } finally {
+            try {
+                if(statement != null)
+                    statement.close();
+            } catch(Exception e){
+                e.printStackTrace();
+            }
+        }
     }
 
     public static ResultSet queryDB(String sql) {
         ResultSet rset = null;
+        Connection conn = null;
+
+        try {
+            conn = DriverManager.getConnection(DB_URL);
+            try{
+                Statement statement = conn.createStatement();
+                rset =  statement.executeQuery(sql);
+                return rset;
+            } catch (SQLException se) {
+                se.printStackTrace();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
 
         return rset;
     }
@@ -250,10 +284,14 @@ public class interfDB {
         Integer success = -1;
         String sql = "";
 
+        if (getAccount(false, usrname, pswd).getTid() != -1) {
+            return 2;
+        }
+
         System.out.println("Creating account in database");    
         sql = "INSERT INTO Customers (tid, username, password, cname, "
               + "state, phonenumber, email, ssn)"
-              + "VALUES (?, ?, ?, ?, ?, ?, ?, ?);";
+              + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
         try {
             connect();
@@ -307,6 +345,14 @@ public class interfDB {
 
         // }
         return success;
+    }
+
+	public static void closeMarket() {
+	}
+
+    static String getCurrentDate() {
+        String date = "06-09-2021";
+        return date;
     }
 }
 
