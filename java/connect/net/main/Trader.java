@@ -7,8 +7,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Scanner;
-
-import javax.naming.spi.DirStateFactory.Result;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Trader {
 
@@ -95,7 +95,7 @@ public class Trader {
 
                     acc = interfDB.getAccount(false ,customerUsername, customerPassword);
                     
-                    if (acc.getTid() != -1){    attempts--;     }
+                    if (acc.getTid() == -1){    attempts--;     }
 
                     if (attempts == 0){
                         System.out.println("Too many attempts. Closing program.");
@@ -131,6 +131,8 @@ public class Trader {
 
     private static void createNewAccount(){
         Scanner scn = new Scanner(System.in);
+        Integer taxid = 0;
+        String []names = new String[2];
 
         System.out.println("You must deposit $1,000 to open a market account.");
         System.out.print("Press enter if you agree, if not enter any key.");
@@ -143,20 +145,96 @@ public class Trader {
         System.out.println("\nPlease enter the following fields to create an account");
         System.out.print("Username: ");
         String username = scn.nextLine();
+        while(usernameExist(username)){
+            System.out.print("Account with this username already exists.\nEnter unique username: ");
+            username = scn.nextLine();
+        }
+
         System.out.print("Password: ");
         String password = scn.nextLine();
-        System.out.print("First and Last Name: ");
-        String name = scn.nextLine();
+        
+        System.out.print("First Name: ");
+        names[0] = scn.nextLine();
+        while(!isAlpha(names[0])){
+            System.out.println("Enter name with only letters.");
+            System.out.print("First Name: ");
+            names[0] = scn.nextLine();
+        }
+
+        System.out.print("Last Name: ");
+        names[1] = scn.nextLine();
+        while(!isAlpha(names[1])){
+            System.out.println("Enter name with only letters.");
+            System.out.print("Last Name: ");
+            names[1] = scn.nextLine();
+        }
+        String name = names[0].substring(0, 1).toUpperCase() + names[0].substring(1) + " " 
+                    + names[1].substring(0, 1).toUpperCase() + names[1].substring(1);
+
         System.out.print("State you reside in (i.e. CA,NV,etc.): ");
-        String state = scn.nextLine();
+        String state = scn.nextLine().toUpperCase();
+        while(!validState(state)){
+            System.out.print("Invalid.\nPlease enter 2-letter State code: ");
+            state = scn.nextLine();
+        }
+
         System.out.print("Phone number (xxx)xxxxxxx : ");
         String phone = scn.nextLine();
+        while(!validPhoneNum(phone)){
+            System.out.print("Invalid.\nEnter number in valid format (xxx)xxxxxxx: ");
+            phone = scn.nextLine();
+        }
+
         System.out.print("Email address: ");
         String email = scn.nextLine();
+        while(!validEmail(email)){
+            System.out.println("Invalid email address. Please enter a valid one.");
+            System.out.print("Email address: ");
+            email = scn.nextLine();
+        }
+
         System.out.print("ssn (xxx-xx-xxxx): ");
         String SSN = scn.nextLine();
+        while(!validSSN(SSN)){
+            System.out.println("Please enter a valid ssn.");
+            System.out.print("ssn: ");
+            SSN = scn.nextLine();
+        }
+        
+        if (ssnExists(SSN)){
+            System.out.println("Account with this SSN already exists.");
+            System.out.println("Restart program and try logging in to existing account.");
+            System.exit(1);
+        }
+
+        boolean valid = false;
+        boolean exists = false;
         System.out.print("4-digit TaxID: ");
-        int taxid = scn.nextInt();
+
+        do {
+            String taxId = scn.nextLine();
+
+            try {
+                taxid = Integer.parseInt(taxId);
+                if(taxid >= 10000){
+                    valid = false;
+                    System.out.println("Invalid. Only input 4 digits.");
+                    System.out.print("TaxID: ");
+                }else{  valid = true; }
+
+                if(tidExists(taxid)){
+                    exists = true;
+                    System.out.println("TaxID exists for other account.");
+                    System.out.print("Enter unique TaxID: ");
+                }else{
+                    exists = false;
+                }
+
+            } catch (NumberFormatException e) {
+                System.out.println("Enter only numerical inputs.\nEnter valid TaxID.");
+            }
+
+        } while (taxid == null || !valid || exists);
         
         System.out.println("");
 
@@ -167,20 +245,15 @@ public class Trader {
             System.out.println("Customer account has been created for username " + username + "\n");
             System.out.println("Adding $1000 into your market account.");
             System.out.println("Getting banking information...");
-            String aid = addMarketAcc(taxid);
+            String aid = Market.addMarketAcc(taxid);
 
             System.out.println("Market account created!\nAccount ID is "+ aid + ", balance at $1000.00");
             System.out.println("We'll go ahead and log you in and take you to the traders interface\n\n");
             Trader.openTradersInt(username, password);
-        }else if ( successful == 2){
-            System.out.println("");
-            System.out.println("Customer account already exists");
-            System.out.println("Logging you into existing account");
         } else {
             System.out.println("");
             System.out.println("Customer account creation has failed for username " + username);
             System.out.print("Would you like to try again? (yes/no)  ");
-
             String s = scn.nextLine();
 
             if (s.toLowerCase() == "yes"){
@@ -191,21 +264,125 @@ public class Trader {
                 System.exit(1);
             }
         }
-
         scn.close();
     }
 
+    /*      Validate Account Inputs     */
 
+    private static boolean validState(String state) {
+        if (state.length()!=2 || !isAlpha(state)){
+            return false;
+        }else{
+            return true;
+        }
+    }
+
+    public static boolean isAlpha(String name) {
+        return name.matches("[a-zA-Z]+");
+    }
+
+    private static boolean validPhoneNum(String phone) {
+        Pattern pattern = Pattern.compile("^(\\(\\d{3}\\))?\\d{3}?\\d{4}$");
+        Matcher matcher = pattern.matcher(phone);
+        return matcher.matches();
+    }
+
+    private static boolean validSSN(String ssn) {
+        String regex = "^(?!000|666)[0-8][0-9]{2}-(?!00)[0-9]{2}-(?!0000)[0-9]{4}$";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(ssn);
+        return matcher.matches();
+    }
+
+    public static boolean validEmail(String email) {
+        String ePattern = "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\])|(([a-zA-Z\\-0-9]+\\.)+[a-zA-Z]{2,}))$";
+        Pattern p = java.util.regex.Pattern.compile(ePattern);
+        Matcher m = p.matcher(email);
+        return m.matches();
+     }
+
+    /*      Check for Existing Fields     */
+
+    private static boolean ssnExists(String ssn) {
+        String sql = "SELECT * FROM Customers WHERE ssn =?";
+        boolean exists = false;
+
+        try{
+            connect();
+            PreparedStatement prepstmt = conn.prepareStatement(sql);
+            prepstmt.setString(1, ssn);
+            ResultSet rs = prepstmt.executeQuery();
+
+            if (rs.next()){
+                exists = true;
+            }
+        }catch(SQLException e){
+            e.printStackTrace();
+        }finally{
+            close();
+        }
+
+        return exists;
+    }
+
+    private static boolean tidExists(Integer taxid) {
+        String sql = "SELECT * FROM Customers WHERE tid =?";
+        boolean exists = false;
+
+        try{
+            connect();
+            PreparedStatement prepstmt = conn.prepareStatement(sql);
+            prepstmt.setInt(1, taxid);
+            ResultSet rs = prepstmt.executeQuery();
+
+            if (rs.next()){
+                exists = true;
+            }
+        }catch(SQLException e){
+            e.printStackTrace();
+        }finally{
+            close();
+        }
+
+        return exists;
+    }
+
+    private static boolean usernameExist(String username) {
+        String sql = "SELECT * FROM Customers WHERE username =?";
+        boolean exists = false;
+
+        try{
+            connect();
+            PreparedStatement prepstmt = conn.prepareStatement(sql);
+            prepstmt.setString(1, username);
+            ResultSet rs = prepstmt.executeQuery();
+
+            if (rs.next()){
+                exists = true;
+            }
+        }catch(SQLException e){
+            e.printStackTrace();
+        }finally{
+            close();
+        }
+
+        return exists;
+    }
+
+
+    /*           Main Traders Interface             */
     static void openTradersInt(String username, String password) {
         String input = "";
         Integer choice = -1;
         Account acc = interfDB.getAccount(false, username, password);
+        Integer taxID = acc.getTid();
         Scanner scn = new Scanner(System.in);
+        Double balance = 0.0;
 
         System.out.println("\n||         Traders Interface           ||");
         System.out.println("-----------------------------------------");
 		System.out.println("Welcome " + acc.getName() + "!");
-        System.out.println("Current date: " + interfDB.getCurrentDate() + "\n");
+        System.out.println("Current date: " + interfDB.getCurrentDate());
 
         if (!isMarketOpen()){
             System.out.println("The market is closed. No buying or selling of stocks is allowed.\n");
@@ -218,7 +395,7 @@ public class Trader {
 		{
 			if(isMarketOpen)
 			{
-				System.out.println("What would you like to do today?");
+				System.out.println("\nWhat would you like to do?");
                 System.out.println("---------------------------------");
 				System.out.println("1. Deposit into Market Account");
 				System.out.println("2. Withdraw from Market Account");
@@ -234,7 +411,7 @@ public class Trader {
 			{
 				//if market is closed
 				System.out.println();
-				System.out.println("What would you like to do today?");
+				System.out.println("nWhat would you like to do?");
                 System.out.println("---------------------------------");
 				System.out.println("1. Deposit into Market Account");
 				System.out.println("2. Withdraw from Market Account");
@@ -268,17 +445,21 @@ public class Trader {
                 //switch on choice
                 switch(choice)
                 {
-                    case 1: showDepositOrWithdraw(0);
+                    case 1: showDepositOrWithdraw(0,taxID);
+                            balance = interfDB.getBalance(taxID);
+                            System.out.println("Balance is now: " + balance);
                             break;
-                    case 2: showDepositOrWithdraw(1);
+                    case 2: showDepositOrWithdraw(1,taxID);
+                            balance = interfDB.getBalance(taxID);
+                            System.out.println("Balance is now: " + balance);
                             break;
-                    case 3: showBuy();
+                    case 3: showBuy(taxID);
                             break;
-                    case 4: showSell();
+                    case 4: showSell(taxID);
                             break;
-                    case 5: showMarketBalance(acc.getTid());
+                    case 5: showMarketBalance(taxID);
                             break;
-                    case 6: showStockTransactions();
+                    case 6: showStockTransactions(taxID);
                             break;
                     case 7: showCurrentStockPrice();
                             break;
@@ -291,13 +472,17 @@ public class Trader {
             } else {
                 //switch on choice
                 switch(choice) {
-                    case 1: showDepositOrWithdraw(0);
+                    case 1: showDepositOrWithdraw(0,taxID);
+                            balance = interfDB.getBalance(taxID);
+                            System.out.println("Balance is now: $" + String.format("%.2f", balance));
                             break;
-                    case 2: showDepositOrWithdraw(1);
+                    case 2: showDepositOrWithdraw(1,taxID); 
+                            balance = interfDB.getBalance(taxID);
+                            System.out.println("Balance is now: $" + String.format("%.2f", balance));
                             break;
-                    case 3: showMarketBalance(acc.getTid());
+                    case 3: showMarketBalance(taxID);
                             break;
-                    case 4: showStockTransactions();
+                    case 4: showStockTransactions(taxID);
                             break;
                     case 5: showCurrentStockPrice();
                             break;
@@ -311,166 +496,136 @@ public class Trader {
 		}
     }
 
-    private static String addMarketAcc(int tid) {
-        String newAid = "---";
-        Integer num = getNumMarketAccounts()+1;
-        
-        if (num >= 100) {
-            newAid = num.toString(); 
-        }
-        else if (num >= 10){
-            newAid = "0" + num.toString();
-        }else{
-            newAid = "00" + num.toString();
-        }
-
-        String sql = "INSERT INTO Markets(tid, aid, balance) "
-            + "VALUES (?, ?, ?)";
-
-        try{
-            conn = DriverManager.getConnection(DB_URL);
-            PreparedStatement prepstmt = conn.prepareStatement(sql);
-            System.out.println("tid: " + tid +", aid: " + newAid + ", balance: " + 1000.00);
-            prepstmt.setInt(1, tid);
-            prepstmt.setString(2, newAid);
-            prepstmt.setDouble(3, 1000.00);
-        }catch(SQLException e){
-            e.printStackTrace();
-        }
-
-        return newAid;
-    }
-
-    private static void showDepositOrWithdraw(int i) {
+    
+    /*          Functions for Users Choices         */ 
+    private static void showDepositOrWithdraw(int i, int tid) {
         Scanner scn = new Scanner(System.in);
-        ResultSet rs = null;
-        String sql = "";
+        String resp = "";
+        Double bal = interfDB.getBalance(tid);
 
         if (i == 0) {
             System.out.print("How much would you like to deposit: ");
             String s = scn.nextLine();
             Double amount = Double.parseDouble(s);
-
-            addToMarketBalance(amount, i);
-            // scn.close();
-
-        }else {
+            Market.addToMarketBalance(amount, tid);
+        }
+        else {
             System.out.print("How much would you like to withdraw: ");
             String s = scn.nextLine();
             Double amount = Double.parseDouble(s);
-            subToMarketBalance(amount, i);
+            if (bal - amount <= 0){
+                System.out.println("Withdrawal takes account balance to a negative balance or ZERO");
+                System.out.print("Would you like to withdraw remaining account balance of $" + bal + "? ");
+                resp = scn.nextLine();
+                if (resp.toLowerCase().equals("yes")) {
+                    Market.subToMarketBalance(bal, tid);
+                }else{
+                    System.out.println("Withdrawal has been canceled.\nBalance remains the same.");
+                }
+            }else{
+                Market.subToMarketBalance(amount, tid);
+            }
         }
     }
 
-    private static void showBuy() {
+    private static void showBuy(int tid) {
+        Scanner s = new Scanner(System.in);
+        if (interfDB.getBalance(tid) == 0.0){
+            System.out.println("Current account balance is at $0.00.\nMust deposit into account to purchase any stocks.");
+            return;
+        }
 
+        System.out.println("Available Stocks and Pricing");
+        System.out.println("------------------------------------");
+        Stocks.showStocksWPrices();
+        System.out.print("\nWhich stock would you like to purchase? ");
+        String buySym = s.nextLine().toUpperCase();
+        System.out.print("How may shares? ");
+        int shares = s.nextInt();
+        Stocks.buyStock(buySym, tid, shares);
     }
 
-    private static void showSell() {
-        Double earnings = 0.0;
+    private static void showSell(int tid) {
+        Scanner s = new Scanner(System.in);
 
-        Double profits = earnings - Commission;
+        System.out.println("Your current stock holdings");
+        System.out.println("-------------------------------");
+        Stocks.showStocksOwned(tid);
+        System.out.print("\nWhich stock would you like to sell? ");
+        String buySym = s.nextLine().toUpperCase();
+        System.out.print("How may of your total shares do you want to sell? ");
+        int shares = s.nextInt();
+        Stocks.sellStock(buySym, tid, shares);
     }
-    
-
 
     private static void showMarketBalance(int tid) {
-        double balance = getBalance(tid); 
-        System.out.println("Your current market balance is " + balance);
+        double balance = interfDB.getBalance(tid); 
+        System.out.println("Your current market balance is $" + String.format("%.2f", balance));
     }
 
-    private static double getBalance(int tid) {
-        double balance = 0.00;
-        String sql = "SELECT balance FROM Markets WHERE tid=?";
-        
-        try {
-            connect();
-
-            PreparedStatement prepstmt = conn.prepareStatement(sql);
-            prepstmt.setInt(1, tid);
-            ResultSet rs = prepstmt.executeQuery();
-            
-            if (rs.next()){
-                balance = rs.getDouble("balance");
-            }
-            } catch (Exception se) {
-                se.printStackTrace();
-            }
-            finally{
-                close();
-            }
-            return balance;
-    }
-
-
-
-    private static void showStockTransactions() {
+    private static void showStockTransactions(int i) {
+        System.out.println("Transaction history for this month, " + Date.getMonth());
     }
     
     private static void showCurrentStockPrice() {
+        System.out.println("Which stock would you like to learn more about? ");
+        Stocks.showStocks();
+        Scanner s = new Scanner(System.in);
+        String sym = s.nextLine().toUpperCase();
+        Double price = Stocks.getStockPrice(sym);
+        System.out.println("Price for stock " + sym + " is currently $" + String.format("%.2f", price));
+        showActorInfo(sym);
     }
     
+    private static void showActorInfo(String sym) {
+        String sql = "SELECT * FROM Actors WHERE sym=?";
+        try {
+            connect();
+            PreparedStatement prepstmt = conn.prepareStatement(sql);
+            prepstmt.setString(1, sym);
+            ResultSet rs = prepstmt.executeQuery();
+
+            if(rs.next()){
+                String name = rs.getString("aname");
+                String role = rs.getString("role");
+                String dob = rs.getString("dob");
+                String title = rs.getString("title");
+                Integer value = rs.getInt("value");
+                Integer year = rs.getInt("year_released");
+                System.out.println("This stock is for " + name + ", born on " + dob + ", paid \n$" + value  
+                + " as a/an " + role + " in the movie " + title + " (" + year + ")");
+
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }finally{
+            close();
+        }
+    }
+
     private static void showMovieInfo() {
+        System.out.println("Movies our Stock Actors have been in:");
+        listMovies();
     }
 
-    private static boolean isMarketOpen() {
-        return true;
-    }
-
-    
-    private static Integer getNumMarketAccounts() {
-        Integer count = 0;
-        String sql = "SELECT COUNT(aid) FROM Markets";
+    private static void listMovies() {
+        String sql = "SELECT DISTINCT title FROM Actors";
 
         try {
             connect();
             Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery(sql);
-            
-            if (rs.next()){
-                count = rs.getInt(1);
+            ResultSet rs = stmt.executeQuery(sql); 
+
+            while(rs.next()){
+                System.out.println(rs.getString("title"));
             }
-        } catch (Exception se) {
-                se.printStackTrace();
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-        finally{
-            close();
-        }
-        return count;
     }
 
-    public static void addToMarketBalance(Double amount, int tid) {
-        String sql = "UPDATE Markets SET balance=balance + ? WHERE tid=?";
-        try
-        {
-          connect();
-          PreparedStatement prepstmt = conn.prepareStatement(sql);
-          prepstmt.setDouble(1, amount);
-          prepstmt.setInt(2, tid);;
-          prepstmt.executeUpdate();
-        }catch(SQLException se)
-        {
-          se.printStackTrace();
-        }
-        Double balance = getBalance(tid);
-        System.out.println("Balance is now: " + balance);
-    }
-
-    public static void subToMarketBalance(Double amount, int tid) {
-        String sql = "UPDATE Markets SET balance = balance - ? WHERE tid=?";
-        try
-        {
-          connect();
-          PreparedStatement prepstmt = conn.prepareStatement(sql);
-          prepstmt.setDouble(1, amount);
-          prepstmt.setInt(2, tid);;
-          prepstmt.executeUpdate();
-          
-        }catch(SQLException se)
-        {
-          se.printStackTrace();
-        }
-        Double balance = getBalance(tid);
-        System.out.println("Balance is now: " + balance);
+    private static boolean isMarketOpen() {
+        return true;
     }
 }

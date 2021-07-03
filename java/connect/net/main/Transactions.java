@@ -10,8 +10,8 @@ public class Transactions {
 
     private static final String DB_URL = "jdbc:sqlite:C:/Users/obenn/Desktop/sqlite/sqlite-tools-win32-x86-3350500/StarsRus_proj/db/starsrus.db";
     private static Connection conn = null;
-    private static Statement stmt;
-    private static PreparedStatement prepstmt;
+    private static Statement stmt = null;
+    private static PreparedStatement prepstmt = null;
     
     public static void connect() {
         try {
@@ -55,16 +55,16 @@ public class Transactions {
         {
             se.printStackTrace();
         }
-}
+    }
 
-    public static void record_transaction(String date, String customerTAXID, String sym, double price, int shares, double profit){
+    public static void record_transaction(String date, int customerTAXID, String sym, double price, int shares, double profit){
         String sql = "INSERT INTO StockTransactions (date, ctid,sym ,price ,shares,profit)" +
                         "VALUES( ?, ?, ?, ?, ?, ?)";
         try {
             connect();
             PreparedStatement prepstmt = conn.prepareStatement(sql);
             prepstmt.setString(1, date);
-            prepstmt.setString(2, customerTAXID);
+            prepstmt.setInt(2, customerTAXID);
             prepstmt.setString(3, sym);
             prepstmt.setDouble(4, price);
             prepstmt.setInt(5, shares);
@@ -73,6 +73,8 @@ public class Transactions {
 
         } catch (Exception e) {
             e.printStackTrace();
+        }finally {
+            close();
         }
 
     }
@@ -87,6 +89,8 @@ public class Transactions {
             stmt.executeUpdate(sql);
         } catch (Exception e) {
             e.printStackTrace();
+        }finally {
+            close();
         }
     }
 

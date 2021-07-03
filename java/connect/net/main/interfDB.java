@@ -27,15 +27,6 @@ public class interfDB {
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
-        // } finally {
-        //     try {
-        //         if (conn != null) {
-        //             conn.close();
-        //         }
-        //     } catch (SQLException ex) {
-        //         System.out.println(ex.getMessage());
-        //     }
-        // }
     }
 
     private static void close() {
@@ -120,31 +111,28 @@ public class interfDB {
     }
 
 
-    public boolean changeStockPrice(String stocksymbol, float newprice)
-    {
-      String sql = "";
-      try
-      {
-        connect();
-        sql = "UPDATE Stock SET current_price=? WHERE ssym=?;";
-        PreparedStatement prepstmt = conn.prepareStatement(sql);
-        prepstmt.setFloat(1, newprice);
-        prepstmt.setString(2, stocksymbol);
-        prepstmt.executeUpdate();
-      }
-      
-      catch(SQLException se)
-      {
-        se.printStackTrace();
-        return false;
-      }
-    //   finally
-    //   {
-    //     close();
-    //   }
-      return true;
-    }
+    static double getBalance(int tid) {
+        double balance = -1;
+        String sql = "SELECT balance FROM Markets WHERE tid=?";
+        
+        try {
+            connect();
 
+            PreparedStatement prepstmt = conn.prepareStatement(sql);
+            prepstmt.setInt(1, tid);
+            ResultSet rs = prepstmt.executeQuery();
+            
+            if (rs.next()){
+                balance = rs.getDouble("balance");
+            }
+            } catch (Exception se) {
+                se.printStackTrace();
+            }
+            finally{
+                close();
+            }
+            return balance;
+    }
 
     public static boolean isMarketOpen()
     {
@@ -313,37 +301,6 @@ public class interfDB {
             close();
         }
 
-
-        // if (success==1) {
-        //     String ownsStockSql = "";
-        //     String ownsMarketSql = "";
-        //     ownsStockSql = "INSERT INTO Stock_Account (username)"
-        //         + "VALUES (?);";
-        //     ownsMarketSql = "INSERT INTO Market_Account (username, mbalance)"
-        //         + "VALUES (?, ?);";
-
-
-        //     try {
-        //         connect();
-
-        //         // Create new entry in ownsStock, creating a new stock account
-        //         PreparedStatement prepstmt = conn.prepareStatement(ownsStockSql);
-        //         prepstmt.setString(1, usrname);
-        //         prepstmt.executeUpdate();
-
-        //         // Create new entry in ownsMarket with $1,000 balance
-        //         prepstmt = conn.prepareStatement(ownsMarketSql);
-        //         prepstmt.setString(1, usrname);
-        //         prepstmt.setFloat(2, 1000);
-        //         prepstmt.executeUpdate();
-
-        //     } catch(SQLException se) {
-        //         se.printStackTrace();
-        //     } finally {
-        //         close();
-        //     }
-
-        // }
         return success;
     }
 
@@ -354,6 +311,7 @@ public class interfDB {
         String date = "06-09-2021";
         return date;
     }
+
 }
 
 

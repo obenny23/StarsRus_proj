@@ -3,18 +3,13 @@ package net.main;
 import java.util.Scanner;
 
 public class Manager {
-    // PreparedStatement prepstmt = null;
-    // ResultSet rs = null;
-
-    private static String nextLine;
 
 	static void ManagerLogin() {
         Scanner scn = new Scanner(System.in);
         int attempts = 3;
 
 		System.out.println("\n         Manager Login           ");
-        System.out.println("---------------------------------\n");
-
+        System.out.println("---------------------------------");
         System.out.println("Enter your manager credentials\n");
 
         System.out.print("Username: ");
@@ -53,10 +48,9 @@ public class Manager {
         System.out.println("\n||         Manager Interface           ||");
         System.out.println("-----------------------------------------");
         System.out.println("Welcome " + account.getName() + "!\n");
+		System.out.println("\n" + interfDB.getCurrentDate());
 
 		while(true){
-			System.out.println("\n" + interfDB.getCurrentDate());
-
 			System.out.println("\nWhat would you like to do today?\n");
 			System.out.println("1. Add interest");
 			System.out.println("2. Generate Monthly Statement");
@@ -83,7 +77,6 @@ public class Manager {
 			else
 			{
 				int choice = scn.nextInt();
-				nextLine = scn.nextLine();
 
                 if(choice < 1 || choice > 11)
 				{
@@ -110,7 +103,7 @@ public class Manager {
 							break;
 					case 8: goCloseMarket();
 							break;
-					case 9: showCurrentStockPrice();
+					case 9: showChangeStockPrice();
 							break;
 					case 10: setNewDate();
 							break;
@@ -121,16 +114,38 @@ public class Manager {
 
 	}
 
-    //Manager Funcions
+    private static void showChangeStockPrice() {
+		Scanner s = new Scanner(System.in);
+		System.out.println("Available Stocks and Pricing");
+        System.out.println("------------------------------------");
+        Stocks.showStocks();
+        System.out.print("\nWhich stock would you like to change? ");
+        String buySym = s.nextLine().toUpperCase();
+		System.out.print("What would you like the new price to be? ");
+		Double newprice = s.nextDouble();
+		int success = Stocks.changeStockPrice(buySym, newprice);
+		Double p = Stocks.getStockPrice(buySym);
+		if (success == 1){
+			System.out.println("Stock " + buySym + " successfully changed to " + p);
+		}
+		s.close();
+	}
+
+	//Manager Funcions
     private static void setNewDate() {
         Scanner scn = new Scanner(System.in);
 
         System.out.println("Current date: " + interfDB.getCurrentDate());
 
-        System.out.println("Please enter desire new date in the form MM-DD-YYYY.");
-        System.out.print("desired date: ");
-        String date = scn.nextLine();
-
+        System.out.println("Please enter desired new date,");
+		System.out.print("Month: ");
+		String month = scn.nextLine();
+		System.out.print("Day: " );
+		String day = scn.nextLine();
+		System.out.print("Year: ");
+        String year = scn.nextLine();
+		
+		String date = month + "-" + day + "-" + year;
 		interfDB.changeDate(date);
 		scn.close();
     }

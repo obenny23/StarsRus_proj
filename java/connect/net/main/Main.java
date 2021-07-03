@@ -39,7 +39,7 @@ public class Main{
         Populate.createDB();
         System.out.println("            Welcome to Stars R Us             ");
         System.out.println("----------------------------------------------");
-        System.out.println("Current date: " + getCurrentDate());
+        System.out.println("Current date: " + interfDB.getCurrentDate());
         System.out.println(" ");
 
         System.out.println("Would you like to Login as:");
@@ -51,7 +51,6 @@ public class Main{
             String s = scn.nextLine();
 
             try {
-
                 input = Integer.parseInt(s);
 
             } catch (NumberFormatException e) {
@@ -77,13 +76,6 @@ public class Main{
                 break;
         }
         scn.close();
-    }
-
-    private static String getCurrentDate() {
-        String date = "xx-xx-xxxx";
-        date = interfDB.getDate();
-
-        return date;
     }
     
 }
