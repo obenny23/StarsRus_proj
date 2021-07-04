@@ -118,17 +118,16 @@ public class Manager {
 		Scanner s = new Scanner(System.in);
 		System.out.println("Available Stocks and Pricing");
         System.out.println("------------------------------------");
-        Stocks.showStocks();
+        Stocks.showStocksWPrices();
         System.out.print("\nWhich stock would you like to change? ");
-        String buySym = s.nextLine().toUpperCase();
+        String sym = s.nextLine().toUpperCase();
 		System.out.print("What would you like the new price to be? ");
 		Double newprice = s.nextDouble();
-		int success = Stocks.changeStockPrice(buySym, newprice);
-		Double p = Stocks.getStockPrice(buySym);
+		int success = Stocks.changeStockPrice(sym, newprice);
+		Double p = Stocks.getStockPrice(sym);
 		if (success == 1){
-			System.out.println("Stock " + buySym + " successfully changed to " + p);
+			System.out.println("Stock " + sym + " successfully changed to " + p);
 		}
-		s.close();
 	}
 
 	//Manager Funcions
@@ -192,15 +191,11 @@ public class Manager {
     }
     
     private static void showAddInterest() {
-		System.out.println("Adding interest of " + getCurrInterestRate() + " to all account balances...");
+		System.out.println("Adding monthly interest to all account balances...");
 		addInterest();
 		System.out.println("Done!\n");
     }
 
     private static void addInterest() {
-	}
-
-	private static String getCurrInterestRate() {
-		return null;
 	}
 }

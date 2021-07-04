@@ -136,33 +136,35 @@ public class interfDB {
 
     public static boolean isMarketOpen()
     {
-        String sql = "";
-        boolean isMarketOpen = false;
+        return true;
 
-        try
-        {
-            connect();
+        // String sql = "";
+        // boolean isMarketOpen = false;
 
-            sql = "SELECT Open FROM Date;";
-            stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery(sql);
+        // try
+        // {
+        //     connect();
 
-            while(rs.next())
-            {
-                if(rs.getInt("Open") == 1)
-                    isMarketOpen = true;
-            }
-        }
-        catch(SQLException se)
-        {
-            se.printStackTrace();
-            return false;
-        }
-        finally
-        {
-            close();
-        }
-        return isMarketOpen;
+        //     sql = "SELECT Open FROM Date;";
+        //     stmt = conn.createStatement();
+        //     ResultSet rs = stmt.executeQuery(sql);
+
+        //     while(rs.next())
+        //     {
+        //         if(rs.getInt("Open") == 1)
+        //             isMarketOpen = true;
+        //     }
+        // }
+        // catch(SQLException se)
+        // {
+        //     se.printStackTrace();
+        //     return false;
+        // }
+        // finally
+        // {
+        //     close();
+        // }
+        // return isMarketOpen;
     }
 
     /*      For Date         */
@@ -276,7 +278,6 @@ public class interfDB {
             return 2;
         }
 
-        System.out.println("Creating account in database");    
         sql = "INSERT INTO Customers (tid, username, password, cname, "
               + "state, phonenumber, email, ssn)"
               + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";

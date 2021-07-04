@@ -57,14 +57,16 @@ public class Transactions {
         }
     }
 
-    public static void record_transaction(String date, int customerTAXID, String sym, double price, int shares, double profit){
-        String sql = "INSERT INTO StockTransactions (date, ctid,sym ,price ,shares,profit)" +
-                        "VALUES( ?, ?, ?, ?, ?, ?)";
+    public static void recordTransaction(int cTid, String sym, double price, int shares, double profit){
+        String sql = "INSERT INTO StockTransactions (date, ctid,sym ,price ,shares,profit)" 
+                    + "VALUES( ?, ?, ?, ?, ?, ?)";
+        String date = interfDB.getCurrentDate();
+
         try {
             connect();
             PreparedStatement prepstmt = conn.prepareStatement(sql);
             prepstmt.setString(1, date);
-            prepstmt.setInt(2, customerTAXID);
+            prepstmt.setInt(2, cTid);
             prepstmt.setString(3, sym);
             prepstmt.setDouble(4, price);
             prepstmt.setInt(5, shares);
@@ -79,6 +81,7 @@ public class Transactions {
 
     }
 
+    
     public static void delete_transaction(){
         String sql = "DELETE " +
                         "FROM StockTransactions ";
@@ -92,6 +95,9 @@ public class Transactions {
         }finally {
             close();
         }
+    }
+
+    public static void showTransactionHistory(int tid) {
     }
 
     // public static int get_total_shares(String taxID){
@@ -148,7 +154,7 @@ public class Transactions {
     //     try{
     //         while(resultSet.next()){
     //             String date = resultSet.getString("date");
-    //             String customerTAXID = resultSet.getString("customerTAXID");
+    //             String cTid = resultSet.getString("cTid");
     //             String actorID = resultSet.getString("actorID");
     //             double price = resultSet.getDouble("price");
     //             int shares = resultSet.getInt("shares");
@@ -157,7 +163,7 @@ public class Transactions {
 
     //             res += "Date: " + date;
     //             res += ", Transaction type: " + ((shares>0) ? "Buy" : "Sell");
-    //             res += ", Customer TaxID: "  + customerTAXID;
+    //             res += ", Customer TaxID: "  + cTid;
     //             res += ", Stock symbol: " + actorID;
     //             res += ", Price: " + (new Double(price)).toString();
     //             res += ", Shares: " + (new Integer(shares)).toString();

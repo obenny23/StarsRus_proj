@@ -14,7 +14,6 @@ public class Trader {
 
     
     private static final String DB_URL = "jdbc:sqlite:C:/Users/obenn/Desktop/sqlite/sqlite-tools-win32-x86-3350500/StarsRus_proj/db/starsrus.db";
-    private static final Double Commission = 20.00;
     private static Connection conn = null;
     private static Statement stmt;
     private static PreparedStatement prepstmt;
@@ -128,17 +127,16 @@ public class Trader {
         }
     }
 
-
     private static void createNewAccount(){
         Scanner scn = new Scanner(System.in);
         Integer taxid = 0;
         String []names = new String[2];
 
-        System.out.println("You must deposit $1,000 to open a market account.");
+        System.out.println("\nYou must deposit $1,000 to open a market account.");
         System.out.print("Press enter if you agree, if not enter any key.");
         String promptThousand = scn.nextLine();
         if (!promptThousand.equals("")) {
-            System.out.println("We hate to see you leave ): \nThank you for considering Stars R' Us!");
+            System.out.println("\nWe hate to see you leave ): \nThank you for considering Stars R' Us!");
             System.exit(1);
         }
 
@@ -242,17 +240,17 @@ public class Trader {
 
         if (successful == 1) {
             System.out.println("");
-            System.out.println("Customer account has been created for username " + username + "\n");
+            System.out.println("Account successfully created for " + username + "!\n");
             System.out.println("Adding $1000 into your market account.");
-            System.out.println("Getting banking information...");
+            System.out.println("Getting banking information...\n");
             String aid = Market.addMarketAcc(taxid);
 
             System.out.println("Market account created!\nAccount ID is "+ aid + ", balance at $1000.00");
-            System.out.println("We'll go ahead and log you in and take you to the traders interface\n\n");
+            System.out.println("We'll go ahead and log you in and take you to the traders interface..\n\n");
             Trader.openTradersInt(username, password);
         } else {
             System.out.println("");
-            System.out.println("Customer account creation has failed for username " + username);
+            System.out.println("Customer account creation has failed for username: " + username);
             System.out.print("Would you like to try again? (yes/no)  ");
             String s = scn.nextLine();
 
@@ -383,16 +381,15 @@ public class Trader {
         System.out.println("-----------------------------------------");
 		System.out.println("Welcome " + acc.getName() + "!");
         System.out.println("Current date: " + interfDB.getCurrentDate());
+        boolean isMarketOpen = interfDB.isMarketOpen();
 
-        if (!isMarketOpen()){
+        if (!isMarketOpen){
             System.out.println("The market is closed. No buying or selling of stocks is allowed.\n");
         }
 
-
-        boolean isMarketOpen = isMarketOpen();
-
 		while((isMarketOpen && choice != 9) || (!isMarketOpen && choice != 7))
 		{
+            choice = 11;
 			if(isMarketOpen)
 			{
 				System.out.println("\nWhat would you like to do?");
@@ -465,9 +462,10 @@ public class Trader {
                             break;
                     case 8: showMovieInfo();
                             break;
-                    default: System.out.println("\nHave a great day!");
+                    case 9: System.out.println("\nHave a great day!");
                             scn.close();
                             System.exit(1);
+                    default: return;
                 }
             } else {
                 //switch on choice
@@ -488,9 +486,10 @@ public class Trader {
                             break;
                     case 6: showMovieInfo();
                             break;
-                    default:  System.out.println("\nHave a great day!");
+                    case 7:  System.out.println("\nHave a great day!");
                             scn.close();
                             System.exit(1);
+                    default: return;
                 }
 			}
 		}
@@ -540,7 +539,12 @@ public class Trader {
         Stocks.showStocksWPrices();
         System.out.print("\nWhich stock would you like to purchase? ");
         String buySym = s.nextLine().toUpperCase();
-        System.out.print("How may shares? ");
+        while(Stocks.getStockPrice(buySym) == -1.0){
+            System.out.println("Invalid choice.");
+            System.out.print("Enter an available stock option: ");
+            buySym = s.nextLine().toUpperCase();
+        }
+        System.out.print("How many shares? ");
         int shares = s.nextInt();
         Stocks.buyStock(buySym, tid, shares);
     }
@@ -550,12 +554,19 @@ public class Trader {
 
         System.out.println("Your current stock holdings");
         System.out.println("-------------------------------");
-        Stocks.showStocksOwned(tid);
-        System.out.print("\nWhich stock would you like to sell? ");
-        String buySym = s.nextLine().toUpperCase();
-        System.out.print("How may of your total shares do you want to sell? ");
-        int shares = s.nextInt();
-        Stocks.sellStock(buySym, tid, shares);
+        boolean isEmpty = Stocks.showStocksOwned(tid);
+            if (!isEmpty){
+            System.out.print("\nWhich stock would you like to sell? ");
+            String sellSym = s.nextLine().toUpperCase();
+            while(Stocks.getStockPrice(sellSym) == -1.0){
+                System.out.println("Invalid choice.");
+                System.out.print("Enter an available stock option: ");
+                sellSym = s.nextLine().toUpperCase();
+            }
+            System.out.print("How many of your total shares do you want to sell? ");
+            int shares = s.nextInt();
+            Stocks.sellStock(sellSym, tid, shares);
+        }
     }
 
     private static void showMarketBalance(int tid) {
@@ -563,8 +574,9 @@ public class Trader {
         System.out.println("Your current market balance is $" + String.format("%.2f", balance));
     }
 
-    private static void showStockTransactions(int i) {
-        System.out.println("Transaction history for this month, " + Date.getMonth());
+    private static void showStockTransactions(int tid) {
+        System.out.println("Transactions for the month of " + Date.getMonth() + ":");
+        Transactions.showTransactionHistory(tid);
     }
     
     private static void showCurrentStockPrice() {
@@ -605,12 +617,9 @@ public class Trader {
     }
 
     private static void showMovieInfo() {
-        System.out.println("Movies our Stock Actors have been in:");
-        listMovies();
-    }
-
-    private static void listMovies() {
-        String sql = "SELECT DISTINCT title FROM Actors";
+        System.out.println("Movies our stock actors have been in:");
+        
+        String sql = "SELECT title, year_released  FROM Actors";
 
         try {
             connect();
@@ -618,14 +627,10 @@ public class Trader {
             ResultSet rs = stmt.executeQuery(sql); 
 
             while(rs.next()){
-                System.out.println(rs.getString("title"));
+                System.out.println(rs.getString("title") + " (" + rs.getString("year_released") + ")");
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-    }
-
-    private static boolean isMarketOpen() {
-        return true;
     }
 }

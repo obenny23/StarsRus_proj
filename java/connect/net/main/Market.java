@@ -122,6 +122,7 @@ public class Market {
         }finally {
             close();
         }
+        recordMarketTransaction(tid, amount);
     }
 
     public static void subToMarketBalance(Double amount, int tid) {
@@ -141,6 +142,7 @@ public class Market {
         }finally{
             close();
         }
+        recordMarketTransaction(tid, amount);
     }
 
     public static String getMarketID(int tid) {
@@ -163,6 +165,28 @@ public class Market {
             close();
         }
         return aid;
+    }
+
+    public static void recordMarketTransaction(int tid, double amount){
+        String date = interfDB.getCurrentDate();
+        Double balance = interfDB.getBalance(tid);
+        String sql = "INSERT INTO MarketTransactions (date, ctid, amount, balance)"
+                    + "VALUES( ?, ?, ?, ?)";
+
+        try{
+            connect();
+            PreparedStatement prepstmt = conn.prepareStatement(sql);
+            prepstmt.setString(1, date);
+            prepstmt.setInt(2, tid);
+            prepstmt.setDouble(3, amount);
+            prepstmt.setDouble(4, balance);
+            prepstmt.executeUpdate();
+
+        }catch(SQLException se){
+            se.printStackTrace();
+        }finally{
+            close();
+        }
     }
 
 }
