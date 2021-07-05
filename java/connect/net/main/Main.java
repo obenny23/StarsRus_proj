@@ -40,13 +40,13 @@ public class Main{
         System.out.println("            Welcome to Stars R Us             ");
         System.out.println("----------------------------------------------");
         System.out.println("Current date: " + interfDB.getCurrentDate());
-        System.out.println(" ");
+        System.out.println("");
 
         System.out.println("Would you like to Login as:");
         System.out.print("1. Customer 2.Manager ? \n");
 
         do {
-            System.out.print("Please enter your choice: ");
+            System.out.print("Enter your choice: ");
 
             String s = scn.nextLine();
 

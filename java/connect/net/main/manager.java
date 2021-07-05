@@ -51,7 +51,7 @@ public class Manager {
 		System.out.println("\n" + interfDB.getCurrentDate());
 
 		while(true){
-			System.out.println("\nWhat would you like to do today?\n");
+			System.out.println("\nWhat would you like to do?\n");
 			System.out.println("1. Add interest");
 			System.out.println("2. Generate Monthly Statement");
 			System.out.println("3. List Active Customers");
@@ -80,7 +80,7 @@ public class Manager {
 
                 if(choice < 1 || choice > 11)
 				{
-					System.out.println("Invalid input. Please choose one of the 7 options below.");
+					System.out.println("Invalid input. Please choose one of the 11 options.");
 					continue;
 				}
 
@@ -124,9 +124,9 @@ public class Manager {
 		System.out.print("What would you like the new price to be? ");
 		Double newprice = s.nextDouble();
 		int success = Stocks.changeStockPrice(sym, newprice);
-		Double p = Stocks.getStockPrice(sym);
+		Double newp = Stocks.getStockPrice(sym);
 		if (success == 1){
-			System.out.println("Stock " + sym + " successfully changed to " + p);
+			System.out.println("Stock " + sym + " successfully changed to " + String.format("$%.2f", newp));
 		}
 	}
 
@@ -146,8 +146,9 @@ public class Manager {
 		
 		String date = month + "-" + day + "-" + year;
 		interfDB.changeDate(date);
-		scn.close();
-    }
+		System.out.println("Date changed to " + interfDB.getCurrentDate() + ".");
+
+	}
 
     private static void goOpenMarket() {
 		if(interfDB.isMarketOpen()){
@@ -171,10 +172,6 @@ public class Manager {
 	}
 
 	private static void showStockTransactions(){
-
-	}
-
-	private static void showCurrentStockPrice(){
 
 	}
 

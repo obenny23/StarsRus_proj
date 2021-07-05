@@ -18,9 +18,8 @@ public class interfDB {
     private static Statement stmt;
     private static PreparedStatement prepstmt;
 
-    public static void connect() {
+    private static void connect() {
         try {
-            // db parameters
             // create a connection to the database
             conn = DriverManager.getConnection(DB_URL);
                         
@@ -110,7 +109,6 @@ public class interfDB {
         return account;
     }
 
-
     static double getBalance(int tid) {
         double balance = -1;
         String sql = "SELECT balance FROM Markets WHERE tid=?";
@@ -134,95 +132,137 @@ public class interfDB {
             return balance;
     }
 
-    public static boolean isMarketOpen()
-    {
-        return true;
+    public static boolean isMarketOpen(){
+        String sql = "SELECT Open FROM Date";
+        boolean isMarketOpen = false;
 
-        // String sql = "";
-        // boolean isMarketOpen = false;
+        try
+        {
+            connect();
 
-        // try
-        // {
-        //     connect();
+            stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
 
-        //     sql = "SELECT Open FROM Date;";
-        //     stmt = conn.createStatement();
-        //     ResultSet rs = stmt.executeQuery(sql);
-
-        //     while(rs.next())
-        //     {
-        //         if(rs.getInt("Open") == 1)
-        //             isMarketOpen = true;
-        //     }
-        // }
-        // catch(SQLException se)
-        // {
-        //     se.printStackTrace();
-        //     return false;
-        // }
-        // finally
-        // {
-        //     close();
-        // }
-        // return isMarketOpen;
+            if(rs.getInt("Open") == 1){
+                    isMarketOpen = true;
+            }
+        }
+        catch(SQLException se)
+        {
+            se.printStackTrace();
+            return false;
+        }
+        finally
+        {
+            close();
+        }
+        return isMarketOpen;
     }
 
     /*      For Date         */
-    public static String getDate(){
-        String QUERY =  "SELECT * " +
-                        "FROM Date ";
-
-        // ResultSet resultSet = Utility.sql_query(QUERY);
-
+    public static String getCurrentDate() {
         String date = "";
+        String sql = "SELECT date FROM Date";
 
-        // try{
-        //     if(!resultSet.next()){
-        //         System.out.println("current date not found!");
-        //         System.exit(1);
-        //     }
+        try{
+            connect();
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
 
-        //     date = resultSet.getString("d");
-        // } catch (Exception e){
-        //     e.printStackTrace();
-        // }
+            if (rs.next()){
+                date = rs.getString("date");
+            }
+        }catch(SQLException e){
+            e.printStackTrace();
+        }finally{
+            close();
+        }
 
         return date;
     }
 
     public static void changeDate(String date){
-        ResultSet rset = null;
-
-        String sql1 = "DELETE " +
-                "FROM Date ";
-
-        String sql2 = "INSERT INTO Date " +
-                "VALUES('" + date + "')";
+        String sql = "UPDATE Date SET date =?";
         
-        Statement stmt = null;
         try {
-            stmt = conn.createStatement();
-
-            stmt.executeUpdate(sql1);
-            stmt.executeUpdate(sql2); 
+            connect();
+            PreparedStatement prepstmt = conn.prepareStatement(sql);
+            prepstmt.setString(1, date);
+            prepstmt.executeUpdate();
 
         } catch (SQLException se) {
             se.printStackTrace();
         }
         finally {
-           try {
-               if(stmt != null)
-                   stmt.close();
-           } catch(Exception e){
-               e.printStackTrace();
-           }
+           close();
         }
     }
 
     public static void openMarket(){
-
+        String sql = "UPDATE Date SET open=1";
+        try {
+            connect();
+            Statement stmt = conn.createStatement();
+            stmt.executeUpdate(sql);
+        } catch (SQLException se) {
+            se.printStackTrace();
+        }finally{
+            close();
+        }
     }
 
+    public static void closeMarket() {
+        String sql = "UPDATE Date SET open=0";
+        try {
+            connect();
+            Statement stmt = conn.createStatement();
+            stmt.executeUpdate(sql);
+        } catch (SQLException se) {
+            se.printStackTrace();
+        }finally{
+            close();
+        }
+	}
+
+    public static Integer createAccount(int taxId, String usrname, String pswd, String cName,
+                            String cstate, String phoneNum, String cEmail, String SSN){
+        Integer success = -1;
+        String sql = "";
+
+        if (getAccount(false, usrname, pswd).getTid() != -1) {
+            return 2;
+        }
+
+        sql = "INSERT INTO Customers (tid, username, password, cname, "
+              + "state, phonenumber, email, ssn)"
+              + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
+        try {
+            connect();
+            PreparedStatement prepstmt = conn.prepareStatement(sql);
+            prepstmt.setInt(1, taxId);
+            prepstmt.setString(2, usrname);
+            prepstmt.setString(3, pswd);
+            prepstmt.setString(4, cName);
+            prepstmt.setString(5, cstate);
+            prepstmt.setString(6, phoneNum);
+            prepstmt.setString(7, cEmail);
+            prepstmt.setString(8, SSN);
+            prepstmt.executeUpdate();
+            success = 1;
+        } catch(SQLException se) {
+            se.printStackTrace();
+            success = -1;
+        } finally {
+            close();
+        }
+
+        return success;
+    }
+
+
+    
+  
     public static void updateDB(String sql){
         Connection conn  = null;
         try {
@@ -267,50 +307,6 @@ public class interfDB {
 
 
         return rset;
-    }
-
-    public static Integer createAccount(int taxId, String usrname, String pswd, String cName,
-                            String cstate, String phoneNum, String cEmail, String SSN){
-        Integer success = -1;
-        String sql = "";
-
-        if (getAccount(false, usrname, pswd).getTid() != -1) {
-            return 2;
-        }
-
-        sql = "INSERT INTO Customers (tid, username, password, cname, "
-              + "state, phonenumber, email, ssn)"
-              + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-
-        try {
-            connect();
-            PreparedStatement prepstmt = conn.prepareStatement(sql);
-            prepstmt.setInt(1, taxId);
-            prepstmt.setString(2, usrname);
-            prepstmt.setString(3, pswd);
-            prepstmt.setString(4, cName);
-            prepstmt.setString(5, cstate);
-            prepstmt.setString(6, phoneNum);
-            prepstmt.setString(7, cEmail);
-            prepstmt.setString(8, SSN);
-            prepstmt.executeUpdate();
-            success = 1;
-        } catch(SQLException se) {
-            se.printStackTrace();
-            success = -1;
-        } finally {
-            close();
-        }
-
-        return success;
-    }
-
-	public static void closeMarket() {
-	}
-
-    static String getCurrentDate() {
-        String date = "06-09-2021";
-        return date;
     }
 
 }

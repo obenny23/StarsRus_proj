@@ -3,8 +3,11 @@ package net.main;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+
+import javax.naming.spi.DirStateFactory.Result;
 
 public class Transactions {
 
@@ -82,15 +85,14 @@ public class Transactions {
     }
 
     
-    public static void delete_transaction(){
+    public static void deleteTransactions(){
         String sql = "DELETE " +
                         "FROM StockTransactions ";
         try {
             connect();
-
             Statement stmt = conn.createStatement();
             stmt.executeUpdate(sql);
-        } catch (Exception e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }finally {
             close();
@@ -98,82 +100,86 @@ public class Transactions {
     }
 
     public static void showTransactionHistory(int tid) {
+        String sql = "";
+        String trans = "";
+
+        sql = "SELECT * FROM StockTransactions WHERE ctid=?";
+
+        try {
+            connect();
+            PreparedStatement prepstmt = conn.prepareStatement(sql);
+            prepstmt.setInt(1, tid);
+            ResultSet rs = prepstmt.executeQuery();
+            if(!rs.isBeforeFirst()){
+                System.out.println("No Stock Transactions this month.\n");
+            }else{
+                System.out.println("        Stock Transactions      \n");
+                System.out.println("   Date      Stock  Shares   Price   Profit");
+                System.out.println("---------------------------------------------");
+                
+                while(rs.next()){
+                    trans = rs.getString("date") + " | "
+                            + rs.getString("sym") + "    " 
+                            + rs.getInt("shares") + "    " 
+                            + String.format("$%.2f",rs.getDouble("price")) + "  "
+                            + String.format("$%.2f",rs.getDouble("profit"));
+
+                    System.out.println(trans);
+                }
+            }
+
+
+            sql = "SELECT * FROM MarketTransactions WHERE ctid=?";
+            String am = "";
+
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, tid);
+            rs = ps.executeQuery();
+
+            if(!rs.isBeforeFirst()){
+                System.out.println("No Market Transactions this month.");
+            }else{
+                System.out.println("\n          Market Transactions    \n");
+                System.out.println("    Date        Amount          Balance");
+                System.out.println("-----------------------------------------");
+                
+                while(rs.next()){
+                    am = String.format(" $%.2f",rs.getDouble("amount"));
+
+                    if (am.charAt(2) == '-'){
+                        am = "-$" + am.substring(3);
+                    }
+
+                    if (am.length() <= 14){
+                        for (int i = am.length(); i <= 14;i++){
+                            am += " ";
+                        }
+                    }
+
+                    trans = rs.getString("date") + " | "
+                            + am + "  "
+                            + String.format("$%.2f",rs.getDouble("balance"));
+                    System.out.println(trans);
+                }
+            }
+
+            sql = "SELECT * FROM AccruedInterest WHERE ctid=?";
+            PreparedStatement pst = conn.prepareStatement(sql);
+            pst.setInt(1, tid);
+            rs = pst.executeQuery();
+
+            if(rs.next()){
+                Double interest = rs.getDouble("interest");
+                Double balance = rs.getDouble("balance");
+                System.out.println("Interest accrued for the month was "
+                    + String.format("$%.2f", interest) + ", for an account balance of "
+                    + String.format("$%.2f", balance));
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }finally{
+            close();
+        }
     }
-
-    // public static int get_total_shares(String taxID){
-    //     String QUERY =  "SELECT * " +
-    //                     "FROM StockTransactions " +
-    //                     "WHERE CustomerTAXID = " + "'" + taxID + "'";
-
-    //     ResultSet resultSet = Utility.sql_query(QUERY);
-
-    //     int sum = 0;
-    //     try{
-    //         while(resultSet.next()){
-    //             int shares = resultSet.getInt("shares");
-
-    //             sum += Math.abs(shares);
-    //         }
-    //     } catch(Exception e){
-    //         e.printStackTrace();
-    //     }
-
-    //     return sum;
-    // }
-
-    // public static double get_total_profit(String taxID){
-    //     String QUERY =  "SELECT * " +
-    //                     "FROM StockTransactions " +
-    //                     "WHERE CustomerTAXID = " + "'" + taxID + "'";
-
-    //     ResultSet resultSet = Utility.sql_query(QUERY);
-
-    //     double sum = 0;
-    //     try{
-    //         while(resultSet.next()){
-    //             double profit = resultSet.getDouble("profit");
-
-    //             sum += profit;
-    //         }
-    //     } catch(Exception e){
-    //         e.printStackTrace();
-    //     }
-
-    //     return sum;
-    // }
-
-    // public static String get_transactions(String taxID){
-    //     String QUERY =  "SELECT * " +
-    //                     "FROM StockTransactions " +
-    //                     "WHERE CustomerTAXID = " + "'" + taxID + "'";
-
-    //     ResultSet resultSet = Utility.sql_query(QUERY);
-
-    //     String res = "";
-
-    //     try{
-    //         while(resultSet.next()){
-    //             String date = resultSet.getString("date");
-    //             String cTid = resultSet.getString("cTid");
-    //             String actorID = resultSet.getString("actorID");
-    //             double price = resultSet.getDouble("price");
-    //             int shares = resultSet.getInt("shares");
-    //             double profit = resultSet.getDouble("profit");
-
-
-    //             res += "Date: " + date;
-    //             res += ", Transaction type: " + ((shares>0) ? "Buy" : "Sell");
-    //             res += ", Customer TaxID: "  + cTid;
-    //             res += ", Stock symbol: " + actorID;
-    //             res += ", Price: " + (new Double(price)).toString();
-    //             res += ", Shares: " + (new Integer(shares)).toString();
-    //             res += ", Profit: " + (new Double(profit)).toString();
-    //             res += "\n";
-    //         }
-    //     } catch(Exception e){
-    //         e.printStackTrace();
-    //     }
-
-    //     return res;
-    // }
 }

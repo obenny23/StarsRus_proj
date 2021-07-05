@@ -514,7 +514,7 @@ public class Trader {
             Double amount = Double.parseDouble(s);
             if (bal - amount <= 0){
                 System.out.println("Withdrawal takes account balance to a negative balance or ZERO");
-                System.out.print("Would you like to withdraw remaining account balance of $" + bal + "? ");
+                System.out.print("Would you like to withdraw remaining account balance of " + String.format("$%.2f", bal) + "? ");
                 resp = scn.nextLine();
                 if (resp.toLowerCase().equals("yes")) {
                     Market.subToMarketBalance(bal, tid);
@@ -575,7 +575,8 @@ public class Trader {
     }
 
     private static void showStockTransactions(int tid) {
-        System.out.println("Transactions for the month of " + Date.getMonth() + ":");
+        System.out.println("Transactions for the month of " + Date.getMonth());
+        System.out.println("--------------------------------------");
         Transactions.showTransactionHistory(tid);
     }
     

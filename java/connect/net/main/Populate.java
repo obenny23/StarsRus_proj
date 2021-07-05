@@ -24,8 +24,9 @@ public class Populate {
                 dropTable.executeUpdate("DROP TABLE Actors");
                 dropTable.executeUpdate("DROP TABLE StockTransactions");
                 dropTable.executeUpdate("DROP TABLE MarketTransactions");
-                dropTable.executeUpdate("DROP TABLE AccrueInterest");
-                dropTable.executeUpdate("DROP TABLE StocksHistory");
+                dropTable.executeUpdate("DROP TABLE AccruedInterest");
+                // dropTable.executeUpdate("DROP TABLE StocksHistory");
+                dropTable.executeUpdate("DROP TABLE Date");
                 }
             catch (SQLException e) {
             }
@@ -150,20 +151,27 @@ public class Populate {
                 + "amount DOUBLE, "
                 + "balance DOUBLE )");
 
-            createTable.executeUpdate("CREATE TABLE AccrueInterest ("
+            createTable.executeUpdate("CREATE TABLE AccruedInterest ("
                 + "date NVARCHAR(8), "
                 + "ctid INTEGER, "
                 + "mtid INTEGER, "
                 + "interest DOUBLE, "
                 + "balance DOUBLE )");
                 
+            createTable.executeUpdate("CREATE TABLE Date("
+                + "date NVARCHAR(10), "
+                + "open INTEGER, "
+                + "time NVARCHAR(5) )");   
+                
+            createTable.executeUpdate("INSERT INTO Date (date, open, time) "
+                + "VALUES ('07-06-2021', 1, '14:00')");
 
-            createTable.executeUpdate("CREATE TABLE StocksHistory (DATE varchar(8), ACTORID varchar(3), PRICE DOUBLE )");
+                 // createTable.executeUpdate("CREATE TABLE StocksHistory ("
+            //     + "DATE varchar(8), "
+            //     + "ACTORID varchar(3), "
+            //     + "PRICE DOUBLE )");
 
 
-            // createTable.executeUpdate("CREATE TABLE Date("
-                //+ " Open INTEGER, "
-                //+ " )");           
             
         }
         catch (Exception e) {

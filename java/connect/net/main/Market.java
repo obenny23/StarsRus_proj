@@ -142,7 +142,7 @@ public class Market {
         }finally{
             close();
         }
-        recordMarketTransaction(tid, amount);
+        recordMarketTransaction(tid, -amount);
     }
 
     public static String getMarketID(int tid) {

@@ -54,6 +54,8 @@ public class Stocks {
         }
     }
 
+    /*          Make Changes to Stocks Database     */
+
     public static void addNewStockAccount(int tid, String sym, int shares, Double price){
         String sql = "INSERT INTO Stocks(tid, shares, sym, price) "
             + "VALUES (?, ?, ?, ?);";
@@ -74,6 +76,114 @@ public class Stocks {
             close();
         }
     }
+
+    public static void buyStock(String buySym, int tid, int shares) {
+        double balance = interfDB.getBalance(tid);
+        double price = getStockPrice(buySym);
+        double total = price * shares + 20.00;
+        if (shares <= 0){
+            System.out.println("Must buy 1 or more shares.");
+            System.out.println("Transaction failed.");
+            return;
+        }
+
+        if(balance < total){
+            System.out.println("Cannot buy " + shares + " shares of " + buySym 
+            + ".\nPurchase total exceeds your account balance.\nTransaction failed.\n");
+        }else{
+            Market.subToMarketBalance(total, tid);
+            Transactions.recordTransaction(tid, buySym, price, shares, 0.00);
+            if(holdsStock(tid,buySym)){
+                updateStockAcc(tid, buySym, shares, price);
+            }else {
+                addNewStockAccount(tid, buySym, shares, price);
+            }
+        System.out.println("Successfully bought " + shares + " shares of " + buySym + "!");
+        System.out.println("Transaction total: " + String.format("%.2f", total));
+        }
+    }
+
+    public static void sellStock(String sellSym, int tid, int shares){
+        double buyPrice = getStockPurchasePrice(sellSym, tid);
+        double currPrice = getStockPrice(sellSym);
+        double profit = (currPrice - buyPrice) * shares;
+        double total = currPrice*shares - 20.00;
+        int sharesOwned = getNumShares(tid, sellSym, buyPrice);
+
+        if (shares <= 0){
+            System.out.println("Must sell at least 1 share.");
+            System.out.println("Transaction failed.");
+            return;
+        }
+
+        if (sharesOwned < shares){
+            System.out.println("Cannot sell " + shares + " shares of " + sellSym 
+            + ".\nRequested number of shares exceeds shares owned.\nTransaction failed.\n");
+        }else{
+            Transactions.recordTransaction(tid, sellSym, currPrice, -shares, profit);    
+            Market.addToMarketBalance(total, tid);
+            updateStocksOwned(tid, sellSym, shares, buyPrice);
+            System.out.println("Successfully sold " + shares + " shares of " + sellSym + "!");
+            System.out.println(String.format("$%.2f", total) + " added to your account balance.\n" 
+                            + "Your profit from this transaction was " + String.format("$%.2f", profit));
+        }
+    }
+
+    private static void updateStockAcc(int tid, String buySym, int shares, double price) {
+        String sql = "UPDATE Stocks SET price=?, shares= shares +? WHERE tid=? AND sym=?";
+        Double pricePurch = getStockPurchasePrice(buySym, tid);
+        Integer ownedShares = getNumShares(tid, buySym, pricePurch);
+        Double priceAve = ((shares * price) + (ownedShares*pricePurch)) / (ownedShares+shares);
+
+        try {
+            connect();
+            PreparedStatement prepstmt = conn.prepareStatement(sql);
+            prepstmt.setDouble(1, priceAve);
+            prepstmt.setInt(2, shares);
+            prepstmt.setInt(3, tid);
+            prepstmt.setString(4, buySym);
+            prepstmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }finally{
+            close();
+        }
+    }
+
+    private static void updateStocksOwned(int tid, String sellSym, int shares, Double price) {
+        String sql = "";
+        Integer ownedShares = getNumShares(tid, sellSym, price);
+
+        if (ownedShares == shares){
+            sql = "DELETE FROM Stocks WHERE tid=? AND sym=? AND price=?";
+        } else{
+            sql = "UPDATE Stocks SET shares= shares - ? WHERE tid=? AND sym=? AND price=?";
+        }
+
+        try {
+            connect();
+            PreparedStatement prepstmt = conn.prepareStatement(sql);
+            if (ownedShares == shares){
+                prepstmt.setInt(1, tid);
+                prepstmt.setString(2, sellSym);
+                prepstmt.setDouble(3, price);
+            }else {
+                prepstmt.setInt(1, shares);
+                prepstmt.setInt(2, tid);
+                prepstmt.setString(3, sellSym);
+                prepstmt.setDouble(4, price);
+            }
+            prepstmt.executeUpdate();
+
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally{
+            close();
+        }
+    }
+
+    /*          Display Functions       */
 
     public static void showStocks(){
         String sql = "SELECT DISTINCT sym FROM Actors";
@@ -112,7 +222,7 @@ public class Stocks {
             while(rs.next()){
                 ssym = rs.getString("sym");
                 price = rs.getDouble("curr_price");
-                System.out.println("Stock: " + ssym + ", Current price: " + price);
+                System.out.println("Stock: " + ssym + ", Current price: " + String.format("$%.3f", price));
             }
         }
         catch(SQLException e){
@@ -141,7 +251,7 @@ public class Stocks {
                 String s = rs.getString("sym");
                 Integer shares = rs.getInt("shares");
                 Double price = rs.getDouble("price");
-                System.out.println(s + "    " + shares +" shares at $" + String.format("%.2f", price));
+                System.out.println(" " + s + "  " + shares +" shares at $" + String.format("%.2f", price) + " a share");
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -150,6 +260,9 @@ public class Stocks {
         }
         return empty;
     }
+
+
+    /*          Stock DB Queries        */
 
     public static double getStockPrice(String sym){
         String sql =  "SELECT curr_price FROM Actors WHERE sym = ?";
@@ -177,76 +290,6 @@ public class Stocks {
         return price;
     }
     
-    public static void buyStock(String buySym, int tid, int shares) {
-        double balance = interfDB.getBalance(tid);
-        double price = getStockPrice(buySym);
-        double total = price * shares + 20.00;
-
-        if(balance < total){
-            System.out.println("Cannot buy " + shares + " shares of " + buySym 
-            + ".\nPurchase total exceeds your account balance.\nTransaction failed.\n");
-        }else{
-            Market.subToMarketBalance(total, tid);
-            Transactions.recordTransaction(tid, buySym, price, shares, 0.00);
-            Stocks.addNewStockAccount(tid, buySym, shares, price);
-            System.out.println("Successfully bought " + shares + " shares of " + buySym + "!");
-            System.out.println("Transaction total: " + String.format("%.2f", total));
-        }
-    }
-
-    public static void sellStock(String sellSym, int tid, int shares){
-        double buyPrice = getStockPurchasePrice(sellSym);
-        double currPrice = getStockPrice(sellSym);
-        double profit = (currPrice - buyPrice) * shares;
-        double total = currPrice*shares - 20.00;
-        int sharesOwned = getNumShares(tid, sellSym, buyPrice);
-
-        if (sharesOwned < shares){
-            System.out.println("Cannot sell " + shares + " shares of " + sellSym 
-            + ".\nRequested number of shares exceeds shares owned.\nTransaction failed.\n");
-        }else{
-            Transactions.recordTransaction(tid, sellSym, currPrice, shares, profit);    
-            Market.addToMarketBalance(total, tid);
-            Stocks.updateStockAccount(tid, sellSym, shares, buyPrice);
-            System.out.println("Successfully sold " + shares + " shares of " + sellSym + "!");
-            System.out.println(String.format("$%.2f", total) + " added to your account balance.\n" 
-                            + "Your profit from this transaction was " + String.format("$%.2f", profit));
-        }
-    }
-
-    private static void updateStockAccount(int tid, String sellSym, int shares, Double price) {
-        String sql = "";
-        Integer ownedShares = getNumShares(tid, sellSym, price);
-
-        if (ownedShares == shares){
-            sql = "DELETE FROM Stocks WHERE tid=? AND sym=? AND price=?";
-        } else{
-            sql = "UPDATE Stocks SET shares= shares - ? WHERE tid=? AND sym=? AND price=?";
-        }
-
-        try {
-            connect();
-            PreparedStatement prepstmt = conn.prepareStatement(sql);
-            if (ownedShares == shares){
-                prepstmt.setInt(1, tid);
-                prepstmt.setString(2, sellSym);
-                prepstmt.setDouble(3, price);
-            }else {
-                prepstmt.setInt(1, shares);
-                prepstmt.setInt(2, tid);
-                prepstmt.setString(3, sellSym);
-                prepstmt.setDouble(4, price);
-            }
-            prepstmt.executeUpdate();
-
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally{
-            close();
-        }
-    }
-
     private static Integer getNumShares(int tid, String sym, Double price){
         String sql = "Select shares FROM Stocks WHERE tid=? AND sym=? AND price=?";
         Integer shares = 0;
@@ -271,14 +314,15 @@ public class Stocks {
         return shares;
     }
 
-    private static double getStockPurchasePrice(String sellSym) {
-        String sql = "SELECT price FROM Stocks WHERE sym=?";
+    private static double getStockPurchasePrice(String sym, int tid) {
+        String sql = "SELECT price FROM Stocks WHERE sym=? AND tid=?";
         double purchPrice = 0.00;
 
         try {
             connect();
             PreparedStatement prepstmt = conn.prepareStatement(sql);
-            prepstmt.setString(1, sellSym);
+            prepstmt.setString(1, sym);
+            prepstmt.setInt(2, tid);
             ResultSet rs = prepstmt.executeQuery();
 
             while(rs.next()){
@@ -290,6 +334,29 @@ public class Stocks {
         }
         return purchPrice;
     }
+
+    private static boolean holdsStock(int tid, String buySym) {
+        boolean exists = false;
+        String sql = "SELECT * FROM Stocks WHERE tid=? AND sym=?";
+
+        try {
+            connect();
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, tid);
+            ps.setString(2, buySym);
+            ResultSet rs = ps.executeQuery();
+
+            if(rs.next()){
+                exists = true;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }finally{
+            close();
+        }
+        return exists;
+    }
+
 
     /*          Manager Functions          */
 
