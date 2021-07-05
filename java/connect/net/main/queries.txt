@@ -1,4 +1,4 @@
-public void addInterest(double percent) {
+ public void addInterest(double percent) {
     String loginSql = "SELECT t_id \n"
     + "FROM MarketAccounts ";
 
@@ -179,3 +179,81 @@ public Object[][] getCustReport(int taxid) {
 }
 
 }
+
+
+  // public static int get_total_shares(String taxID){
+    //     String QUERY =  "SELECT * " +
+    //                     "FROM StockTransactions " +
+    //                     "WHERE CustomerTAXID = " + "'" + taxID + "'";
+
+    //     ResultSet resultSet = Utility.sql_query(QUERY);
+
+    //     int sum = 0;
+    //     try{
+    //         while(resultSet.next()){
+    //             int shares = resultSet.getInt("shares");
+
+    //             sum += Math.abs(shares);
+    //         }
+    //     } catch(Exception e){
+    //         e.printStackTrace();
+    //     }
+
+    //     return sum;
+    // }
+
+    // public static double get_total_profit(String taxID){
+    //     String QUERY =  "SELECT * " +
+    //                     "FROM StockTransactions " +
+    //                     "WHERE CustomerTAXID = " + "'" + taxID + "'";
+
+    //     ResultSet resultSet = Utility.sql_query(QUERY);
+
+    //     double sum = 0;
+    //     try{
+    //         while(resultSet.next()){
+    //             double profit = resultSet.getDouble("profit");
+
+    //             sum += profit;
+    //         }
+    //     } catch(Exception e){
+    //         e.printStackTrace();
+    //     }
+
+    //     return sum;
+    // }
+
+    // public static String get_transactions(String taxID){
+    //     String QUERY =  "SELECT * " +
+    //                     "FROM StockTransactions " +
+    //                     "WHERE CustomerTAXID = " + "'" + taxID + "'";
+
+    //     ResultSet resultSet = Utility.sql_query(QUERY);
+
+    //     String res = "";
+
+    //     try{
+    //         while(resultSet.next()){
+    //             String date = resultSet.getString("date");
+    //             String cTid = resultSet.getString("cTid");
+    //             String actorID = resultSet.getString("actorID");
+    //             double price = resultSet.getDouble("price");
+    //             int shares = resultSet.getInt("shares");
+    //             double profit = resultSet.getDouble("profit");
+
+
+    //             res += "Date: " + date;
+    //             res += ", Transaction type: " + ((shares>0) ? "Buy" : "Sell");
+    //             res += ", Customer TaxID: "  + cTid;
+    //             res += ", Stock symbol: " + actorID;
+    //             res += ", Price: " + (new Double(price)).toString();
+    //             res += ", Shares: " + (new Integer(shares)).toString();
+    //             res += ", Profit: " + (new Double(profit)).toString();
+    //             res += "\n";
+    //         }
+    //     } catch(Exception e){
+    //         e.printStackTrace();
+    //     }
+
+    //     return res;
+    // }
