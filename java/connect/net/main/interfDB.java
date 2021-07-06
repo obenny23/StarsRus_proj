@@ -266,23 +266,26 @@ public class interfDB {
     public static void listActiveCustomers() {
         List<Integer> tids = Market.getTids();
         List<Integer> activeTids = new ArrayList<>();
+        List<Integer> sh = new ArrayList<>();
         Integer shares = 0;
 
         for (Integer tid : tids) {
             shares = Transactions.getTotalShares(tid);
             if (shares >= 1000){
                 activeTids.add(tid);
+                sh.add(shares);
             }
         }
 
         if(activeTids.isEmpty()){
             System.out.println("No Active Accounts this month.");
         }else{
-            showActiveAccounts(activeTids);
+            showActiveAccounts(activeTids, sh);
         }
     }
 
-    private static void showActiveAccounts(List<Integer> activeTids) {
+    private static void showActiveAccounts(List<Integer> activeTids, List<Integer> sh) {
+        int i = 0;
         String sql = "SELECT cname FROM Customers WHERE tid=?";
 
         try {
@@ -294,11 +297,14 @@ public class interfDB {
                 ResultSet rs = prepstmt.executeQuery();
 
                 if (rs.next()){
-                    System.out.println(tid + " | " + rs.getString("cname"));
+                    System.out.println(tid + " | " + rs.getString("cname") + "     Shares: " + sh.get(i));
                 }
+                i++;
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally{
+            close();
         }
     }
 
@@ -335,12 +341,12 @@ public class interfDB {
         for (Map.Entry<Integer, Double> set :earn.entrySet()) {
             st = getStateOfResidency(set.getKey());
             cname = getName(set.getKey());
-            System.out.println(cname + ", resident of " + st + ", Total Earnings: " 
+            System.out.println(cname + "   State: " + st + "     Total Earnings: " 
                 + String.format("$%.2f", set.getValue()));
         }
     }
 
-    private static String getName(Integer tid) {
+    public static String getName(Integer tid) {
         String sql = "SELECT cname FROM Customers WHERE tid=?";
         String name = "";
 
@@ -363,7 +369,7 @@ public class interfDB {
         return name;
     }
 
-    private static String getEmail(Integer tid) {
+    public static String getEmail(Integer tid) {
         String sql = "SELECT email FROM Customers WHERE tid=?";
         String email = "";
 
@@ -386,7 +392,30 @@ public class interfDB {
         return email;
     }
 
-    private static String getStateOfResidency(int tid){
+    public static String getPhone(Integer tid) {
+		String sql = "SELECT phonenumber FROM Customers WHERE tid=?";
+        String phonenumber = "";
+
+        try {
+            connect();
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, tid);
+            ResultSet rs = ps.executeQuery();
+
+            if(rs.next()){
+                phonenumber = rs.getString("phonenumber");
+            }
+            
+        } catch (SQLException se) {
+            se.printStackTrace();
+        } finally{
+            close();
+        }
+
+        return phonenumber;
+	}
+
+    public static String getStateOfResidency(int tid){
         String sql = "SELECT state FROM Customers WHERE tid=?";
         String st = "";
 
@@ -408,13 +437,9 @@ public class interfDB {
 
         return st;
     }
- 
-    
 
 
-
-
-
+    /*          Failed Methods 
     public static void updateDB(String sql){
         Connection conn  = null;
         try {
@@ -473,7 +498,9 @@ public class interfDB {
     }
     private String getTime() {
         return null;
-    }
+    } 
+    */
+
 }
 
 

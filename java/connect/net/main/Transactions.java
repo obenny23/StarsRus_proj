@@ -164,7 +164,7 @@ public class Transactions {
             rs = ps.executeQuery();
 
             if(!rs.isBeforeFirst()){
-                System.out.println("No Market Transactions this month.");
+                System.out.println("No Market Transactions this month.\n");
             }else{
                 System.out.println("\n          Market Transactions    \n");
                 System.out.println("    Date        Amount          Balance");
@@ -195,6 +195,9 @@ public class Transactions {
             pst.setInt(1, tid);
             rs = pst.executeQuery();
 
+            if(!rs.isBeforeFirst()){
+                System.out.println("No interest accrued this month.\n");
+            }
             if(rs.next()){
                 Double interest = rs.getDouble("interest");
                 Double balance = rs.getDouble("balance");
@@ -272,5 +275,26 @@ public class Transactions {
         }
 
         return total;
+    }
+
+    public static Integer getCommissions(Integer t) {
+        String sql = "SELECT COUNT(*) FROM StockTransactions WHERE ctid=?";
+        int count = 0;
+
+        try {
+            connect();
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, t);
+            ResultSet rs = ps.executeQuery();
+            if(rs.next()){
+                count = rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally{
+            close();
+        }
+
+        return count;
     }
 }

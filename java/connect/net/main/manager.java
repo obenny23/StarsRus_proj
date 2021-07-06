@@ -1,5 +1,6 @@
 package net.main;
 
+import java.util.List;
 import java.util.Scanner;
 
 public class Manager {
@@ -115,22 +116,81 @@ public class Manager {
 	}
 	
 	/*			Manager Functional Options		*/
-	//done
-
+	
 	private static void showAddInterest(int mtid) {
 		System.out.println("Adding monthly interest to all account balances...");
 		Market.addInterest(mtid);
 		System.out.println("Done!\n");
     }
-	
+
+	private static void showMonthlyStatement() {
+		Scanner s = new Scanner(System.in);
+		List<Integer> tids = Market.getTids();
+		String name = "";
+
+		System.out.println(" Customers of Stars R' Us");
+		System.out.println("--------------------------");
+		for (Integer tid : tids) {
+			name = interfDB.getName(tid);
+			System.out.println(tid + "   " + name);
+		}
+
+		System.out.print("\nWhich account would you like to generate statement for?\nEnter tid: ");
+		Integer t = s.nextInt();
+		System.out.println("");
+
+		name = interfDB.getName(t);
+		String email = interfDB.getEmail(t);
+		String phone = interfDB.getPhone(t);
+		String st = interfDB.getStateOfResidency(t);
+
+		if(name.equals("")){
+			System.out.println("No account with tid " + t);
+
+		} else{
+			System.out.println(name + "        " + st);
+			System.out.println(email + "   " + phone);
+			System.out.println("");
+			Transactions.showTransactionHistory(t);
+			Double totalEarnings = Transactions.getTotalProfit(t) + Transactions.getInterestCharged(t);
+			Double init = Market.getInitialBalance(t);
+			System.out.println("\nInitial balance: " + String.format("$%.2f", init));
+			System.out.println("End balance: " + String.format("$%.2f", interfDB.getBalance(t)));
+			System.out.println("Total Earnings: " + String.format("$%.2f", totalEarnings));
+			System.out.println("Commisions paid out: " + Transactions.getCommissions(t));
+		}
+    }
+
 	private static void showListActiveCustomers() {
-		System.out.println("Listing Active Customers who have bought or sold 1000+ shares.");
+		System.out.println("Listing Active Customers who have bought/sold 1000+ shares");
 		System.out.println("---------------------------------------------------------------");
 		interfDB.listActiveCustomers();
     }
 
 	private static void showDTER() {
 		interfDB.generateDTER();
+    }
+
+	private static void showCustomerReport() {
+		Scanner s = new Scanner(System.in);
+		List<Integer> tids = Market.getTids();
+		String name = "";
+
+		System.out.println(" Customers of Stars R' Us");
+		System.out.println("--------------------------");
+		for (Integer tid : tids) {
+			name = interfDB.getName(tid);
+			System.out.println(tid + "   " + name);
+		}
+
+		System.out.print("\nWhich account would you like a report for?\nEnter tid: ");
+		Integer t = s.nextInt();
+		System.out.println("\n      Current Stock Holdings");
+        System.out.println("-----------------------------------");
+		Stocks.showStocksOwned(t);
+		System.out.println("\nAccount Market Balance:  "
+				+ String.format("$%.2f", interfDB.getBalance(t)));
+
     }
 
 	private static void deleteTransactions() {
@@ -189,28 +249,20 @@ public class Manager {
         System.out.println("Please enter desired new date,");
 		System.out.print("Month: ");
 		String month = scn.nextLine();
+		if (month.length() == 1){	month = "0"+month;	}
 		System.out.print("Day: " );
 		String day = scn.nextLine();
+		if (day.length() == 1){	day = "0"+day;	}
 		System.out.print("Year: ");
         String year = scn.nextLine();
 		
 		String date = month + "-" + day + "-" + year;
-		interfDB.changeDate(date);
-		System.out.println("Date changed to " + interfDB.getCurrentDate() + ".");
-
+		if(!Date.validDate(date)){
+			System.out.println("Invalid date. Could not apply changes.");
+		}else{
+			interfDB.changeDate(date);
+			System.out.println("Date changed to " + interfDB.getCurrentDate() + ".");
+		}
 	}
 
-
-	//in progress
-
-
-	private static void showMonthlyStatement() {
-    }
-
-
-	//need to implement
-
-	private static void showCustomerReport() {
-    }
-    
 }

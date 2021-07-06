@@ -1,5 +1,8 @@
 package net.main;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 // import java.util.ArrayList;
 
 public class Date {
@@ -27,9 +30,11 @@ public class Date {
         return am;
     }
     
-    // public static ArrayList<Integer> stripDate(String date){
-        // ArrayList<Integer> dArrayList = new ArrayList<Integer>();
-        // return date;
-
-    // }
+    public static boolean validDate(String date) {
+        // String regex = "^(0[1-9]|[12][0-9]|3[01])[- /.]$";
+        // Pattern pattern = Pattern.compile(regex);
+        // Matcher matcher = pattern.matcher(date);
+        // return matcher.matches();
+        return true;
+    }
 }
