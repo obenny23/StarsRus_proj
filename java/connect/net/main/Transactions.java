@@ -7,8 +7,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import javax.naming.spi.DirStateFactory.Result;
-
 public class Transactions {
 
     private static final String DB_URL = "jdbc:sqlite:C:/Users/obenn/Desktop/sqlite/sqlite-tools-win32-x86-3350500/StarsRus_proj/db/starsrus.db";
@@ -84,14 +82,43 @@ public class Transactions {
 
     }
 
+    public static void accrueInterest(int tid, int mtid, Double interest, Double balance){
+        String sql = "INSERT INTO AccruedInterest(date, ctid, mtid, interest, balance) "
+                + "VALUES (?, ?, ?, ?, ?)";
+        String date = interfDB.getCurrentDate();
+
+        try {
+            connect();
+            PreparedStatement prepstmt = conn.prepareStatement(sql);
+            prepstmt.setString(1, date);
+            prepstmt.setInt(2, tid);
+            prepstmt.setInt(3, mtid);
+            prepstmt.setDouble(4, interest);
+            prepstmt.setDouble(5, balance);
+            prepstmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }finally{
+            close();
+        }
+    }
     
     public static void deleteTransactions(){
-        String sql = "DELETE " +
-                        "FROM StockTransactions ";
+        String sql = "DELETE FROM StockTransactions ";
         try {
             connect();
             Statement stmt = conn.createStatement();
             stmt.executeUpdate(sql);
+
+            sql = "DELETE FROM MarketTransactions ";
+            stmt = conn.createStatement();
+            stmt.executeUpdate(sql);
+
+            sql = "DELETE FROM AccruedInterest";
+            stmt = conn.createStatement();
+            stmt.executeUpdate(sql);
+
+
         } catch (SQLException e) {
             e.printStackTrace();
         }finally {
@@ -181,5 +208,69 @@ public class Transactions {
         }finally{
             close();
         }
+    }
+
+    public static int getTotalShares(int tid){
+        String sql =  "SELECT shares FROM StockTransactions WHERE ctid =?";
+        int total = 0;
+        
+        try{
+            connect();
+            PreparedStatement prepstmt = conn.prepareStatement(sql);
+            prepstmt.setInt(1, tid);
+            ResultSet rs = prepstmt.executeQuery();
+
+            while(rs.next()){
+                int shares = rs.getInt("shares");
+                total += Math.abs(shares);
+            }
+        } catch(Exception e){
+            e.printStackTrace();
+        }
+
+        return total;
+    }
+
+    public static Double getTotalProfit(int tid){
+        String sql =  "SELECT profit FROM StockTransactions WHERE ctid =?";
+        Double total = 0.0;
+        
+        try{
+            connect();
+            PreparedStatement prepstmt = conn.prepareStatement(sql);
+            prepstmt.setInt(1, tid);
+            ResultSet rs = prepstmt.executeQuery();
+
+            while(rs.next()){
+                Double profit = rs.getDouble("profit");
+                total += profit;
+            }
+        } catch(Exception e){
+            e.printStackTrace();
+        }
+
+        return total;
+    }
+
+    public static Double getInterestCharged(int tid){
+        String sql =  "SELECT interest FROM AccruedInterest WHERE ctid =?";
+        Double total = 0.0;
+        
+        try{
+            connect();
+
+            PreparedStatement prepstmt = conn.prepareStatement(sql);
+            prepstmt.setInt(1, tid);
+            ResultSet rs = prepstmt.executeQuery();
+
+            if(rs.next()){
+                Double interest = rs.getDouble("interest");
+                total += interest;
+            }
+        } catch(Exception e){
+            e.printStackTrace();
+        }
+
+        return total;
     }
 }

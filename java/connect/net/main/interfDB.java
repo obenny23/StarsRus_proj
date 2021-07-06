@@ -1,6 +1,10 @@
 package net.main;
 
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -9,9 +13,6 @@ import java.sql.SQLException;
 
 
 public class interfDB {
-
-    private final Integer OPEN = 9;
-    private final Integer CLOSE = 11;
 
     private static final String DB_URL = "jdbc:sqlite:C:/Users/obenn/Desktop/sqlite/sqlite-tools-win32-x86-3350500/StarsRus_proj/db/starsrus.db";
     private static Connection conn = null;
@@ -261,8 +262,159 @@ public class interfDB {
     }
 
 
+
+    public static void listActiveCustomers() {
+        List<Integer> tids = Market.getTids();
+        List<Integer> activeTids = new ArrayList<>();
+        Integer shares = 0;
+
+        for (Integer tid : tids) {
+            shares = Transactions.getTotalShares(tid);
+            if (shares >= 1000){
+                activeTids.add(tid);
+            }
+        }
+
+        if(activeTids.isEmpty()){
+            System.out.println("No Active Accounts this month.");
+        }else{
+            showActiveAccounts(activeTids);
+        }
+    }
+
+    private static void showActiveAccounts(List<Integer> activeTids) {
+        String sql = "SELECT cname FROM Customers WHERE tid=?";
+
+        try {
+            connect();
+
+            for (Integer tid : activeTids) {
+                PreparedStatement prepstmt = conn.prepareStatement(sql);
+                prepstmt.setInt(1, tid);
+                ResultSet rs = prepstmt.executeQuery();
+
+                if (rs.next()){
+                    System.out.println(tid + " | " + rs.getString("cname"));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void generateDTER() {
+        List<Integer> tids = Market.getTids();
+        HashMap<Integer, Double> earn = new HashMap<>();
+        Double totalProfit = 0.00;
+        Double interest = 0.00;
+        Double earnings = 0.00;
+
+        for (Integer tid : tids) {
+            totalProfit = Transactions.getTotalProfit(tid);
+            interest = Transactions.getInterestCharged(tid);
+
+            earnings = totalProfit + interest;
+            if (earnings> 10000.00){
+                earn.put(tid, earnings);
+            }
+        }
+        
+        System.out.println("Listing Customers who earned more than $10000");
+        System.out.println("-----------------------------------------------");
+        if(earn.isEmpty()){
+            System.out.println("No such customers this month.");
+        } else{
+            listEarners(earn);
+        }
+    }
     
-  
+    private static void listEarners(HashMap<Integer, Double> earn) {
+        String st = "";
+        String cname = "";
+
+        for (Map.Entry<Integer, Double> set :earn.entrySet()) {
+            st = getStateOfResidency(set.getKey());
+            cname = getName(set.getKey());
+            System.out.println(cname + ", resident of " + st + ", Total Earnings: " 
+                + String.format("$%.2f", set.getValue()));
+        }
+    }
+
+    private static String getName(Integer tid) {
+        String sql = "SELECT cname FROM Customers WHERE tid=?";
+        String name = "";
+
+        try {
+            connect();
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, tid);
+            ResultSet rs = ps.executeQuery();
+
+            if(rs.next()){
+                name = rs.getString("cname");
+            }
+            
+        } catch (SQLException se) {
+            se.printStackTrace();
+        } finally{
+            close();
+        }
+
+        return name;
+    }
+
+    private static String getEmail(Integer tid) {
+        String sql = "SELECT email FROM Customers WHERE tid=?";
+        String email = "";
+
+        try {
+            connect();
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, tid);
+            ResultSet rs = ps.executeQuery();
+
+            if(rs.next()){
+                email = rs.getString("email");
+            }
+            
+        } catch (SQLException se) {
+            se.printStackTrace();
+        } finally{
+            close();
+        }
+
+        return email;
+    }
+
+    private static String getStateOfResidency(int tid){
+        String sql = "SELECT state FROM Customers WHERE tid=?";
+        String st = "";
+
+        try {
+            connect();
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, tid);
+            ResultSet rs = ps.executeQuery();
+
+            if(rs.next()){
+                st = rs.getString("state");
+            }
+            
+        } catch (SQLException se) {
+            se.printStackTrace();
+        } finally{
+            close();
+        }
+
+        return st;
+    }
+ 
+    
+
+
+
+
+
     public static void updateDB(String sql){
         Connection conn  = null;
         try {
@@ -305,10 +457,23 @@ public class interfDB {
             e.printStackTrace();
         }
 
-
         return rset;
     }
 
+    private final Integer OPEN = 9;
+    private final Integer CLOSE = 23;
+    private void checkMarketHours(){
+        String time = getTime();
+        Integer hour = Integer.parseInt(time.substring(0, 2));
+        if (hour >= 9 && hour < 23){
+            openMarket();
+        }else if(hour >= 23 && hour < 9){
+            closeMarket();
+        }
+    }
+    private String getTime() {
+        return null;
+    }
 }
 
 

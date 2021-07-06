@@ -539,10 +539,10 @@ public class Trader {
         Stocks.showStocksWPrices();
         System.out.print("\nWhich stock would you like to purchase? ");
         String buySym = s.nextLine().toUpperCase();
-        while(Stocks.getStockPrice(buySym) == -1.0){
+        if(Stocks.getStockPrice(buySym) == -1.0){
             System.out.println("Invalid choice.");
-            System.out.print("Enter an available stock option: ");
-            buySym = s.nextLine().toUpperCase();
+            System.out.print("Stock: " + buySym + " does not exist.");
+            return;
         }
         System.out.print("How many shares? ");
         int shares = s.nextInt();
@@ -558,7 +558,7 @@ public class Trader {
             if (!isEmpty){
             System.out.print("\nWhich stock would you like to sell? ");
             String sellSym = s.nextLine().toUpperCase();
-            while(Stocks.getStockPrice(sellSym) == -1.0){
+            while(Stocks.getStockPurchasePrice(sellSym, tid) == -1.0){
                 System.out.println("Invalid choice.");
                 System.out.print("Enter an available stock option: ");
                 sellSym = s.nextLine().toUpperCase();

@@ -87,17 +87,17 @@ public class Manager {
 				//switch on choice
 				switch(choice)
 				{
-					case 1: showAddInterest();
+					case 1: showAddInterest(account.getTid());
 							break;
 					case 2: showMonthlyStatement();
 							break;
 					case 3: showListActiveCustomers();
 							break;
-					case 4: showGovTaxReport();
+					case 4: showDTER();
 							break;
 					case 5: showCustomerReport();
 							break;
-					case 6: showStockTransactions();
+					case 6: deleteTransactions();
 							break;
 					case 7: goOpenMarket();
 							break;
@@ -113,41 +113,30 @@ public class Manager {
 		}
 
 	}
+	
+	/*			Manager Functional Options		*/
+	//done
 
-    private static void showChangeStockPrice() {
-		Scanner s = new Scanner(System.in);
-		System.out.println("Available Stocks and Pricing");
-        System.out.println("------------------------------------");
-        Stocks.showStocksWPrices();
-        System.out.print("\nWhich stock would you like to change? ");
-        String sym = s.nextLine().toUpperCase();
-		System.out.print("What would you like the new price to be? ");
-		Double newprice = s.nextDouble();
-		int success = Stocks.changeStockPrice(sym, newprice);
-		Double newp = Stocks.getStockPrice(sym);
-		if (success == 1){
-			System.out.println("Stock " + sym + " successfully changed to " + String.format("$%.2f", newp));
-		}
-	}
+	private static void showAddInterest(int mtid) {
+		System.out.println("Adding monthly interest to all account balances...");
+		Market.addInterest(mtid);
+		System.out.println("Done!\n");
+    }
+	
+	private static void showListActiveCustomers() {
+		System.out.println("Listing Active Customers who have bought or sold 1000+ shares.");
+		System.out.println("---------------------------------------------------------------");
+		interfDB.listActiveCustomers();
+    }
 
-	//Manager Funcions
-    private static void setNewDate() {
-        Scanner scn = new Scanner(System.in);
+	private static void showDTER() {
+		interfDB.generateDTER();
+    }
 
-        System.out.println("Current date: " + interfDB.getCurrentDate());
-
-        System.out.println("Please enter desired new date,");
-		System.out.print("Month: ");
-		String month = scn.nextLine();
-		System.out.print("Day: " );
-		String day = scn.nextLine();
-		System.out.print("Year: ");
-        String year = scn.nextLine();
-		
-		String date = month + "-" + day + "-" + year;
-		interfDB.changeDate(date);
-		System.out.println("Date changed to " + interfDB.getCurrentDate() + ".");
-
+	private static void deleteTransactions() {
+		System.out.println("Deleting all transactions...");
+		Transactions.deleteTransactions();
+		System.out.println("Done.");
 	}
 
     private static void goOpenMarket() {
@@ -171,28 +160,57 @@ public class Manager {
 		}
 	}
 
-	private static void showStockTransactions(){
+	private static void showChangeStockPrice() {
+		Scanner s = new Scanner(System.in);
+		System.out.println("Available Stocks and Pricing");
+        System.out.println("------------------------------------");
+        Stocks.showStocksWPrices();
+        System.out.print("\nWhich stock would you like to change? ");
+        String sym = s.nextLine().toUpperCase();
+		if(Stocks.getStockPrice(sym) == -1.00){
+			System.out.println("Stock " + sym + " does not exist.\nCould not change price.");
+			return;
+		}
+
+		System.out.print("What would you like the new price to be? ");
+		Double newprice = s.nextDouble();
+		int success = Stocks.changeStockPrice(sym, newprice);
+		Double newp = Stocks.getStockPrice(sym);
+		if (success == 1){
+			System.out.println("Stock " + sym + " successfully changed to " + String.format("$%.2f", newp));
+		}
+	}
+
+    private static void setNewDate() {
+        Scanner scn = new Scanner(System.in);
+
+        System.out.println("Current date: " + interfDB.getCurrentDate());
+
+        System.out.println("Please enter desired new date,");
+		System.out.print("Month: ");
+		String month = scn.nextLine();
+		System.out.print("Day: " );
+		String day = scn.nextLine();
+		System.out.print("Year: ");
+        String year = scn.nextLine();
+		
+		String date = month + "-" + day + "-" + year;
+		interfDB.changeDate(date);
+		System.out.println("Date changed to " + interfDB.getCurrentDate() + ".");
 
 	}
 
-    private static void showCustomerReport() {
+
+	//in progress
+
+
+	private static void showMonthlyStatement() {
     }
 
-    private static void showGovTaxReport() {
-    }
 
-    private static void showListActiveCustomers() {
-    }
+	//need to implement
 
-    private static void showMonthlyStatement() {
+	private static void showCustomerReport() {
     }
     
-    private static void showAddInterest() {
-		System.out.println("Adding monthly interest to all account balances...");
-		addInterest();
-		System.out.println("Done!\n");
-    }
-
-    private static void addInterest() {
-	}
 }

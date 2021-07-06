@@ -36,7 +36,7 @@ public class Main{
         Integer input = null;
 
         connect();
-        Populate.createDB();
+        // Populate.createDB();
         System.out.println("            Welcome to Stars R Us             ");
         System.out.println("----------------------------------------------");
         System.out.println("Current date: " + interfDB.getCurrentDate());

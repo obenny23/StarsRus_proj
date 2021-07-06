@@ -314,7 +314,7 @@ public class Stocks {
         return shares;
     }
 
-    private static double getStockPurchasePrice(String sym, int tid) {
+    public static double getStockPurchasePrice(String sym, int tid) {
         String sql = "SELECT price FROM Stocks WHERE sym=? AND tid=?";
         double purchPrice = 0.00;
 
@@ -325,12 +325,17 @@ public class Stocks {
             prepstmt.setInt(2, tid);
             ResultSet rs = prepstmt.executeQuery();
 
+            if (!rs.isBeforeFirst()){
+                purchPrice = -1.00;
+            }
             while(rs.next()){
                 double price = rs.getDouble("price");
                 purchPrice = price;
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        }finally{
+            close();
         }
         return purchPrice;
     }

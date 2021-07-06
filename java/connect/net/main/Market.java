@@ -1,6 +1,11 @@
 package net.main;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 public class Market {
     private static final String DB_URL = "jdbc:sqlite:C:/Users/obenn/Desktop/sqlite/sqlite-tools-win32-x86-3350500/StarsRus_proj/db/starsrus.db";
@@ -106,6 +111,8 @@ public class Market {
         return count;
     }
 
+    /*          Balance Changes      */
+
     public static void addToMarketBalance(Double amount, int tid) {
         String sql = "UPDATE Markets SET balance = balance + ? WHERE aid=?";
         String aid = getMarketID(tid);
@@ -189,4 +196,128 @@ public class Market {
         }
     }
 
+    public static void addInterest(int mtid) {
+        String sql = "UPDATE Markets Set balance = balance + ? WHERE tid=?";
+		double rate = (1/12)* 0.02;
+        double interest = 0.00;
+        int tid = -1;
+        double balance;
+
+        HashMap<Integer , Double> aveBalance = getMarketAverageBalances();        
+        Iterator<Map.Entry<Integer,Double>> balances = aveBalance.entrySet().iterator();
+		
+		try {
+			connect();
+
+            while(balances.hasNext()){
+                Map.Entry<Integer, Double> account_balance = balances.next();
+                tid = account_balance.getKey();
+                interest = rate * account_balance.getValue();
+
+
+                prepstmt = conn.prepareStatement(sql);
+                prepstmt.setDouble(1, interest);
+                prepstmt.setInt(2, tid);
+                prepstmt.executeUpdate(sql);
+
+                balance = interfDB.getBalance(tid);
+                Transactions.accrueInterest(tid, mtid, interest, balance);
+            }
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+    private static HashMap<Integer, Double> getMarketAverageBalances() {
+        HashMap<Integer, Double> averages = new HashMap<>();
+        List<Integer> tids = getTids();
+        String date = "";
+        Double ave = 0.0;
+        int month = 0;
+        int days = 0;
+        double bal = 0.00;
+        double pastBalance = 0.00;
+        int daysInMonth = 0;
+        Double total = 0.0;
+
+        for (Integer tid : tids) {
+            date = "";
+            ave = bal = total = pastBalance = 0.00;
+            HashMap <String, Double> EODBalances = getEndOfDayMarketBalances(tid);
+
+            System.out.println("Transactions for TaxID: " + tid);
+            for (Map.Entry<String, Double> set :EODBalances.entrySet()) {
+                date = set.getKey();
+                bal = set.getValue();
+
+                System.out.println("Date: " + date + ",  End balance: " + bal);
+                // first date get total days in month, and start sum 
+                if (days == 0){
+                    month = Date.getMonth(date);
+                    daysInMonth = Date.daysInMonth(month);
+                    days = Date.getDay(date);
+                    total += days * bal;
+                    pastBalance = bal;
+                }else {
+                    days = Date.getDay(date) - days;
+                    total += days*pastBalance;
+                    pastBalance = bal;
+                } 
+
+                System.out.println("days w/ " + pastBalance + " is " + days);
+            }
+
+            if (days != daysInMonth){
+                total += (daysInMonth-days) * bal;
+            }
+
+            ave = total/daysInMonth;
+            System.out.println("Ave: " + ave + ", " + daysInMonth);
+
+            averages.put(tid, ave);
+        }
+
+        return averages;
+    }
+
+    private static HashMap<String, Double> getEndOfDayMarketBalances(Integer tid) {
+        String sql = "SELECT date, balance FROM MarketTransactions WHERE ctid=?";
+        HashMap<String, Double> balances = new HashMap<>();
+
+        try {
+            connect();
+            PreparedStatement prepstmt = conn.prepareStatement(sql);
+            prepstmt.setInt(1, tid);
+            ResultSet rs = prepstmt.executeQuery();
+
+            while(rs.next()){
+                balances.put(rs.getString("date"), rs.getDouble("balance"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }finally{
+            close();
+        }
+        return balances;
+    }
+
+    public static List<Integer> getTids(){
+        String sql = "SELECT DISTINCT tid FROM Markets";
+        List<Integer> tids = new ArrayList<>();
+
+        try{
+            connect();
+            stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
+            while(rs.next()){
+                tids.add(rs.getInt("tid"));
+            }
+        }catch(SQLException e){
+            e.printStackTrace();
+        }finally{
+            close();
+        }
+
+        return tids;
+    }
 }
