@@ -197,94 +197,94 @@ public class Market {
     }
 
     public static void addInterest(int mtid) {
-		double rate = (1/12)* 0.02;
-        double interest = 0.00;
+        float rate = 0.00166666666666666667f;
+        double interest = -1.0;
         int tid = -1;
-        double balance;
-
+        double balance, ave;
+    
         HashMap<Integer , Double> aveBalance = getMarketAverageBalances();        
         Iterator<Map.Entry<Integer,Double>> balances = aveBalance.entrySet().iterator();
-		
+        
         while(balances.hasNext()){
             Map.Entry<Integer, Double> account_balance = balances.next();
             tid = account_balance.getKey();
-            interest = rate * account_balance.getValue();
+            ave = account_balance.getValue();
+            interest = rate * ave;
 
-            // Delete all transactions if interest accrued after end of month
-            if(Date.getDay(interfDB.getCurrentDate()) == 1){
-                Transactions.deleteTransactions();
-            }
+            // // Delete all transactions if interest accrued after end of month
+            // // if(Date.getDay(interfDB.getCurrentDate()) == 1){
+            // //     Transactions.deleteTransactions();
+            // // }
+    
             Market.addToMarketBalance(interest, tid);
             balance = interfDB.getBalance(tid);
+            System.out.println("Interest accrued for account with TaxID :" + tid + " is " + String.format("$%.2f", interest)
+                + "'\nAccount Balance now " + String.format("$%.2f", balance));
             Transactions.accrueInterest(tid, mtid, interest, balance);
         }
-
-	}
-
+    
+    }
+    
     private static HashMap<Integer, Double> getMarketAverageBalances() {
         HashMap<Integer, Double> averages = new HashMap<>();
         List<Integer> tids = getTids();
-        String date = "";
-        Double ave = 0.0;
-        int month = 0;
-        int amountDays = 0;
-        int day = 0;
+        String date;
+        Double ave ;
+        int month;
+        int amountDays;
+        int day;
+        int daysInMonth = 0;
+    
         double bal = 0.00;
         double pastBalance = 0.00;
-        int daysInMonth = 0;
         Double total = 0.0;
-
+    
         for (Integer tid : tids) {
             date = "";
+            day = amountDays = 0;
             ave = bal = total = pastBalance = 0.00;
+    
             HashMap <String, Double> EODBalances = getEndOfDayMarketBalances(tid);
-
-            System.out.println("Transactions for TaxID: " + tid);
-            System.out.println("---------------------------------");
+    
             if(EODBalances.isEmpty()){
                 ave = interfDB.getBalance(tid);
             }else {
-
+    
                 for (Map.Entry<String, Double> set : EODBalances.entrySet()) {
                     date = set.getKey();
                     bal = set.getValue();
-
-                    System.out.println("    Date: " + date + ",  End balance: " + bal);
+    
                     // first date get total days in month, and start sum 
                     if (amountDays == 0){
                         month = Date.getMonth(date);
                         daysInMonth = Date.daysInMonth(month);
-
+    
                         pastBalance = getInitialBalance(tid);
                         day = Date.getDay(date);
                         total += day * pastBalance;
                         pastBalance = bal;
                         amountDays = -1;
-
+    
                     }else {
                         amountDays = Date.getDay(date) - day;
                         day = Date.getDay(date);
                         total += amountDays*pastBalance;
                         pastBalance = bal;
                     } 
-
-                    System.out.println("    balance: " + pastBalance + "  days:  " + amountDays);
                 }
-
+    
                 if (day != daysInMonth){
-                    total += (daysInMonth-day) * bal;
+                    total += (daysInMonth-day) * pastBalance;
                 }
-
+    
                 ave = total/daysInMonth;
             }
-
-            System.out.println("Ave: " + ave + ", " + daysInMonth);
             averages.put(tid, ave);
         }
-
+    
         return averages;
     }
-
+    
     private static HashMap<String, Double> getEndOfDayMarketBalances(Integer tid) {
         String sql = "SELECT date, balance FROM MarketTransactions WHERE ctid=?";
         HashMap<String, Double> balances = new HashMap<>();

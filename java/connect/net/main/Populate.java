@@ -164,7 +164,7 @@ public class Populate {
                 + "time NVARCHAR(5) )");   
                 
             createTable.executeUpdate("INSERT INTO Date (date, open, time) "
-                + "VALUES ('07-06-2021', 1, '14:00')");
+                + "VALUES ('06-01-2021', 1, '14:00')");
 
                  // createTable.executeUpdate("CREATE TABLE StocksHistory ("
             //     + "DATE varchar(8), "
